@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>RegulatED Tools — The Lazy Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff7ed;
+  --paper:#fff;
+  --ink:#1a1206;
+  --ink-2:#5c4b2a;
+  --ink-3:#9c8060;
+  --line:#fde68a;
+  --orange:#c2410c;
+  --amber:#f59e0b;
+  --yellow:#fef9c3;
+  --blue:#3b82f6;
+  --blue-zone:#dbeafe;
+  --green:#16a34a;
+  --green-zone:#dcfce7;
+  --red:#dc2626;
+  --red-zone:#fee2e2;
+  --yellow-zone:#fef9c3;
+  --rad:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;font-family:'Nunito Sans',sans-serif;background:var(--bg);color:var(--ink)}
+body{display:flex;flex-direction:column;max-width:900px;margin:0 auto}
+
+/* ── Header ── */
+.app-hdr{background:var(--paper);border-bottom:2px solid var(--line);padding:14px 16px 0;position:sticky;top:0;z-index:50}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hdr-brand{font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.02em}
+.hdr-brand span{color:#ffaa33}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,0.6);font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.print-btn{background:var(--ink);color:#fff;border:none;border-radius:100px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:transform 0.15s}
+.print-btn:hover{transform:translateY(-1px)}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:10px 14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:var(--ink-2);cursor:pointer;border-bottom:3px solid transparent;transition:color 0.18s,border-color 0.18s;white-space:nowrap}
+.tab.active{color:#ffaa33;border-color:#ffaa33;text-shadow:0 0 8px rgba(255,170,51,0.5)}
+
+/* ── Content ── */
+.content{flex:1;padding:16px}
+.tool{display:none}.tool.active{display:block}
+.tool-title{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:var(--ink);letter-spacing:-0.02em;margin-bottom:4px}
+.tool-sub{font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:18px;line-height:1.5}
+
+/* ══════════════════════════════════
+   TOOL 1 — ACTIVE LISTENING GUIDE
+══════════════════════════════════ */
+.listen-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+@media(max-width:580px){.listen-grid{grid-template-columns:1fr}}
+.listen-card{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s;user-select:none}
+.listen-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px -8px rgba(194,65,12,0.2);border-color:var(--amber)}
+.listen-card.done{border-color:var(--green);background:rgba(34,197,94,0.1)}
+.listen-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:var(--orange);color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;margin-bottom:8px}
+.listen-card.done .listen-num{background:var(--green)}
+.listen-head{font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;color:#fff;margin-bottom:4px}
+.listen-body{font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5}
+.listen-check{float:right;font-size:18px;margin-top:-2px}
+.levels-hdr{font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;color:#fff;margin-bottom:12px;padding-bottom:8px;border-bottom:2px dashed var(--line)}
+.levels-list{display:flex;flex-direction:column;gap:8px}
+.level-row{display:flex;align-items:flex-start;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;transition:border-color 0.15s,background 0.15s}
+.level-row.done{border-color:var(--green);background:rgba(34,197,94,0.1)}
+.level-num{width:26px;height:26px;border-radius:50%;background:var(--amber);color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.level-row.done .level-num{background:var(--green);color:#fff}
+.level-text{flex:1}
+.level-title{font-weight:700;font-size:14px;color:#fff}
+.level-desc{font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px;line-height:1.4}
+.listen-reset{margin-top:14px;background:transparent;border:1.5px solid var(--line);border-radius:100px;padding:7px 16px;font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer;font-family:inherit}
+.sponge-box{background:rgba(255,180,0,0.1);border:1.5px dashed rgba(255,150,0,0.4);border-radius:12px;padding:14px;margin:16px 0;color:rgba(255,255,255,0.85);font-size:14px;color:var(--ink);line-height:1.5}
+.sponge-box strong{color:var(--orange)}
+
+/* ══════════════════════════════
+   TOOL 2 — PROBLEM SOLVING WHEEL
+══════════════════════════════ */
+.wheel-wrap{display:flex;flex-direction:column;align-items:center;gap:20px}
+.wheel-svg-wrap{position:relative;width:300px;height:300px;cursor:pointer;user-select:none}
+.wheel-svg-wrap svg{width:100%;height:100%;transition:transform 0.8s cubic-bezier(0.23,1,0.32,1)}
+.wheel-btn{background:var(--orange);color:#fff;border:none;border-radius:100px;padding:12px 28px;font-family:'Nunito',sans-serif;font-weight:900;font-size:15px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s}
+.wheel-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px -8px rgba(194,65,12,0.4)}
+.wheel-result{min-height:52px;background:var(--paper);border:2px solid var(--orange);border-radius:14px;padding:14px 18px;font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;color:var(--orange);text-align:center;width:100%;max-width:320px;transition:all 0.3s}
+.wheel-result.empty{border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-weight:600;font-size:14px}
+.wheel-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:340px}
+.wo{background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s}
+.wo:hover{border-color:var(--amber);background:var(--yellow)}
+.wo.picked{border-color:var(--orange);background:rgba(217,119,6,0.12);color:var(--orange)}
+
+/* ══════════════════════════════
+   TOOL 3 — BODY CALMING TOOLKIT
+══════════════════════════════ */
+.calm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:520px){.calm-grid{grid-template-columns:1fr 1fr}}
+.calm-card{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s;text-align:center;position:relative}
+.calm-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px -8px rgba(194,65,12,0.2);border-color:var(--amber)}
+.calm-card.open{border-color:var(--orange);background:rgba(217,119,6,0.1)}
+.calm-em{font-size:30px;margin-bottom:6px}
+.calm-name{font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:#fff;line-height:1.3}
+.calm-detail{display:none;margin-top:10px;text-align:left;font-size:12px;color:rgba(255,255,255,0.78);line-height:1.55;border-top:1px dashed var(--line);padding-top:10px}
+.calm-card.open .calm-detail{display:block}
+.calm-tap{font-size:10px;color:rgba(255,255,255,0.45);margin-top:4px;font-weight:600}
+.calm-section-lbl{grid-column:1/-1;font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);padding:8px 0 4px;border-bottom:2px solid var(--line);margin-bottom:2px}
+
+/* ══════════════════════════════════
+   TOOL 4 — ZONES OF REGULATION
+══════════════════════════════════ */
+.zones-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:2px solid var(--ink);border-radius:16px;overflow:hidden}
+@media(max-width:540px){.zones-grid{grid-template-columns:1fr 1fr}}
+.zone-col{display:flex;flex-direction:column;border-right:2px solid var(--ink)}
+.zone-col:last-child{border-right:none}
+@media(max-width:540px){.zone-col:nth-child(2){border-right:none}.zone-col:nth-child(3){border-top:2px solid var(--ink)}.zone-col:nth-child(4){border-top:2px solid var(--ink);border-right:none}}
+.zone-hdr{padding:14px 10px 12px;text-align:center;border-bottom:2px solid rgba(0,0,0,0.12)}
+.zone-emoji{font-size:28px;margin-bottom:4px}
+.zone-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;letter-spacing:0.06em;text-transform:uppercase}
+.zone-body{padding:12px 8px;display:flex;flex-direction:column;gap:0;flex:1}
+.zone-item{display:flex;align-items:center;gap:7px;padding:7px 4px;border-bottom:1px dashed rgba(0,0,0,0.08);cursor:pointer;border-radius:6px;transition:background 0.15s}
+.zone-item:last-child{border-bottom:none}
+.zone-item:hover{background:rgba(0,0,0,0.05)}
+.zone-item.checked{text-decoration:line-through;opacity:0.5}
+.zone-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.zone-text{font-size:12px;font-weight:600;color:#fff;line-height:1.3}
+/* zone colours */
+.zone-blue .zone-hdr{background:#3b82f6;color:#fff}
+.zone-blue .zone-dot{background:#3b82f6}
+.zone-blue .zone-body{background:rgba(59,130,246,0.1)}
+.zone-green .zone-hdr{background:#16a34a;color:#fff}
+.zone-green .zone-dot{background:#16a34a}
+.zone-green .zone-body{background:rgba(34,197,94,0.1)}
+.zone-yellow .zone-hdr{background:#ca8a04;color:#fff}
+.zone-yellow .zone-dot{background:#ca8a04}
+.zone-yellow .zone-body{background:rgba(202,138,4,0.1)}
+.zone-red .zone-hdr{background:#dc2626;color:#fff}
+.zone-red .zone-dot{background:#dc2626}
+.zone-red .zone-body{background:rgba(220,38,38,0.1)}
+.zones-reset{margin-top:12px;background:transparent;border:1.5px solid var(--line);border-radius:100px;padding:7px 16px;font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer;font-family:inherit}
+
+/* ── Print Styles ── */
+@media print{
+  .app-hdr,.print-btn,.tabs,.wheel-btn,.listen-reset,.zones-reset{display:none!important}
+  .tool{display:block!important;page-break-after:always}
+  .tool:last-child{page-break-after:auto}
+  body{background:#fff;max-width:100%}
+  .calm-detail{display:block!important}
+  .calm-card.open,.calm-card{border-color:#ccc}
+  .wheel-result,.wheel-options{display:none!important}
+  .wheel-svg-wrap{display:block!important}
+}
+
+/* ═══════════════════════════════════════════════════
+   ⚡ NEON — RegulatED Tools · Amber Flame
+═══════════════════════════════════════════════════ */
+:root{
+  --na:#ff9900;   /* neon amber primary */
+  --na2:#ffcc00;  /* neon amber bright */
+  --na3:#ff6600;  /* neon amber deep */
+  --nar:#ff4400;  /* neon red accent */
+  --bg:#0f0800;
+  --paper:rgba(255,255,255,0.04);
+  --ink:#ffffff;
+  --ink-2:rgba(255,255,255,0.75);
+  --ink-3:rgba(255,255,255,0.5);
+  --line:rgba(255,153,0,0.12);
+}
+
+html,body{background:#0f0800!important;color:#fff!important}
+
+/* Warm amber nebula */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 65% 55% at 15% 20%,rgba(255,120,0,0.1) 0%,transparent 55%),
+    radial-gradient(ellipse 45% 65% at 85% 75%,rgba(255,180,0,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 35% 35% at 50% 50%,rgba(255,80,0,0.05) 0%,transparent 60%);
+  animation:amberAmbient 10s ease-in-out infinite alternate;
+}
+@keyframes amberAmbient{0%{opacity:0.65}100%{opacity:1}}
+
+/* ── KEYFRAMES ── */
+@keyframes floatTool{0%,100%{transform:translateY(0px)}50%{transform:translateY(-8px)}}
+@keyframes floatCard{0%,100%{transform:translateY(0px)}50%{transform:translateY(-5px)}}
+@keyframes amberPulse{
+  0%,100%{box-shadow:0 0 8px var(--na),0 0 22px rgba(255,153,0,0.4);border-color:rgba(255,153,0,0.65)}
+  50%{box-shadow:0 0 16px var(--na2),0 0 40px rgba(255,200,0,0.5);border-color:rgba(255,200,0,0.85)}
+}
+@keyframes amberCardGlow{
+  0%,100%{border-color:rgba(255,153,0,0.14);box-shadow:0 0 0 rgba(255,153,0,0)}
+  50%{border-color:rgba(255,180,0,0.24);box-shadow:0 0 10px rgba(255,153,0,0.1)}
+}
+@keyframes textAmberGlow{
+  0%,100%{text-shadow:0 0 8px var(--na),0 0 18px rgba(255,153,0,0.5)}
+  50%{text-shadow:0 0 14px var(--na2),0 0 30px rgba(255,200,0,0.7),0 0 50px rgba(255,153,0,0.3)}
+}
+@keyframes tabAmberGlow{
+  0%,100%{box-shadow:0 0 0 rgba(255,153,0,0)}
+  50%{box-shadow:0 2px 14px rgba(255,153,0,0.4)}
+}
+@keyframes wheelSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* ── HEADER ── */
+.app-hdr{background:rgba(15,8,0,0.95)!important;border-bottom:1px solid rgba(255,153,0,0.15)!important;backdrop-filter:blur(16px)!important}
+.hdr-brand{color:#fff!important}
+.hdr-brand span{color:var(--na)!important;text-shadow:0 0 10px var(--na)!important}
+.hdr-sub{color:rgba(255,255,255,0.5)!important}
+.print-btn{
+  background:rgba(255,153,0,0.1)!important;
+  border:1.5px solid rgba(255,153,0,0.65)!important;
+  color:var(--na)!important;text-shadow:0 0 8px var(--na)!important;
+  animation:amberPulse 3s ease infinite!important;
+  transition:all 0.2s!important;
+}
+.print-btn:hover{background:rgba(255,153,0,0.2)!important;filter:brightness(1.25)!important;transform:translateY(-2px)!important}
+
+/* ── TABS ── */
+.tabs{background:rgba(0,0,0,0.3)!important;border-bottom:1px solid rgba(255,153,0,0.1)!important}
+.tab-btn{color:rgba(255,255,255,0.48)!important;transition:all 0.2s!important}
+.tab-btn:hover{color:rgba(255,200,0,0.85)!important;text-shadow:0 0 8px rgba(255,153,0,0.6)!important}
+.tab-btn.active{color:var(--na)!important;border-bottom-color:var(--na)!important;text-shadow:0 0 10px var(--na)!important;animation:tabAmberGlow 2.5s ease infinite!important}
+
+/* ── TOOL CARDS ── */
+.tool-card,[class*='tool-card']{
+  background:rgba(255,255,255,0.03)!important;
+  border:1px solid rgba(255,153,0,0.1)!important;
+  animation:floatTool 6s ease-in-out infinite,amberCardGlow 5s ease infinite!important;
+  transition:all 0.25s!important;
+}
+.tool-card:nth-child(2n){animation-delay:0.6s,1s!important}
+.tool-card:nth-child(3n){animation-delay:1.2s,2s!important}
+.tool-card:hover{
+  background:rgba(255,153,0,0.06)!important;
+  border-color:rgba(255,153,0,0.45)!important;
+  box-shadow:0 0 22px rgba(255,153,0,0.2),0 10px 30px rgba(0,0,0,0.5)!important;
+  transform:translateY(-7px) scale(1.015)!important;
+}
+.tool-title{color:#fff!important;animation:textAmberGlow 4s ease infinite!important}
+.tool-sub{color:rgba(255,255,255,0.6)!important}
+
+/* ── CALM CARDS ── */
+.calm-card{
+  background:rgba(255,255,255,0.03)!important;
+  border:1px solid rgba(255,153,0,0.1)!important;
+  animation:floatCard 5.5s ease-in-out infinite,amberCardGlow 6s ease infinite!important;
+  transition:all 0.2s!important;
+}
+.calm-card:nth-child(2n){animation-delay:0.5s,1.2s!important}
+.calm-card:nth-child(3n){animation-delay:1s,2.4s!important}
+.calm-card.open,.calm-card:hover{
+  border-color:rgba(255,153,0,0.45)!important;
+  box-shadow:0 0 18px rgba(255,153,0,0.18),0 8px 24px rgba(0,0,0,0.4)!important;
+}
+.calm-detail{background:rgba(255,153,0,0.04)!important;border-top:1px solid rgba(255,153,0,0.1)!important}
+
+/* ── EMOTION WHEEL ── */
+.wheel-svg-wrap svg circle,[class*='wheel']{
+  filter:drop-shadow(0 0 6px rgba(255,153,0,0.4));
+}
+[class*='wheel-result']{
+  animation:floatCard 5s ease-in-out infinite!important;
+  border:1px solid rgba(255,153,0,0.2)!important;
+}
+
+/* ── BUTTONS ── */
+button[class*='btn'],button[class*='action'],button[class*='submit'],[class*='tool-btn']{
+  transition:all 0.2s!important;
+}
+button[style*='background:#b45309'],button[style*='background:var(--orange)'],
+[class*='btn-primary'],[class*='cta']{
+  background:rgba(255,153,0,0.12)!important;
+  border:1.5px solid rgba(255,153,0,0.65)!important;
+  color:var(--na)!important;text-shadow:0 0 8px var(--na)!important;
+  box-shadow:0 0 12px rgba(255,153,0,0.3)!important;
+  animation:amberPulse 3s ease infinite!important;
+}
+
+/* ── STRATEGY / RESULT ITEMS ── */
+[class*='strategy'],[class*='result-item'],[class*='option']{
+  background:rgba(255,255,255,0.03)!important;
+  border:1px solid rgba(255,153,0,0.1)!important;
+  animation:floatCard 6s ease-in-out infinite,amberCardGlow 7s ease infinite!important;
+}
+[class*='strategy']:nth-child(2n){animation-delay:0.4s,0.8s!important}
+[class*='strategy']:nth-child(3n){animation-delay:0.8s,1.6s!important}
+[class*='strategy']:hover{border-color:rgba(255,153,0,0.4)!important;box-shadow:0 0 14px rgba(255,153,0,0.15)!important}
+
+/* ── LIGHT BG KILLER ── */
+[style*="background:#fff7ed"],[style*="background:#fff"],[style*="background:white"],[style*="background:var(--bg)"],[style*="background:var(--paper)"]{background:rgba(255,255,255,0.03)!important}
+[style*="color:#1a1206"],[style*="color:var(--ink)"]{color:#fff!important}
+[style*="color:#5c4b2a"],[style*="color:var(--ink-2)"]{color:rgba(255,255,255,0.7)!important}
+[style*="color:#9c8060"],[style*="color:var(--ink-3)"]{color:rgba(255,255,255,0.5)!important}
+[style*="border-color:#e8dcc8"],[style*="border:1px solid var(--line)"]{border-color:rgba(255,153,0,0.1)!important}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;background:#0f0800}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--na),var(--na3));border-radius:2px;box-shadow:0 0 4px var(--na)}
+/* ── FINAL READABILITY CATCH-ALL ──
+   Catches any inline styles or remaining hardcoded light colors
+   that escaped the targeted fixes above.
+── */
+[style*="color:#0"],[style*="color:#1"],[style*="color:#2"],
+[style*="color:#3"],[style*="color:#4"],[style*="color:#5"],
+[style*="color:#6"],[style*="color:#7"],[style*="color:#8"],
+[style*="color:#9a"],[style*="color:#9b"],[style*="color:#9c"],
+[style*="color:#9d"],[style*="color:#9e"],[style*="color:#9f"]{
+  color:rgba(255,255,255,0.85)!important;
+}
+/* Override light inline backgrounds */
+[style*="background:#f"]:not([style*="background:#f97"]):not([style*="background:#fb"]):not([style*="background:#fe"]),
+[style*="background:#e"]:not([style*="background:#ef"]):not([style*="background:#ea"]),
+[style*="background:#d"]:not([style*="background:#dc"]),
+[style*="background:#c"]:not([style*="background:#c084"]):not([style*="background:#c2"]):not([style*="background:#cc"]){
+  background:rgba(255,255,255,0.05)!important;
+}
+/* Force all card/section text children to be readable */
+.card *:not(button):not(.tag):not(.heart):not(.card-cat),
+.res-card *:not(button):not(.res-btn):not(.res-pages),
+.mat-card *:not(button),
+.about-card *:not(button):not(.about-contact-btn),
+.plan-card *:not(button),
+.review-card *:not(button){
+  color:inherit;
+}
+
+</style>
+</head>
+<body>
+
+<div class="app-hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-brand">🧘 <span>Regulat</span>ED Tools</div>
+      <div class="hdr-sub">Interactive · Printable · by Tatianna Bailie</div>
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print All</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTool('listening',this)">🎧 Active Listening</div>
+    <div class="tab" onclick="showTool('wheel',this)">🎡 Problem Solving</div>
+    <div class="tab" onclick="showTool('calming',this)">🧘 Body Calming</div>
+    <div class="tab" onclick="showTool('zones',this)">🟦 Zones</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ══ TOOL 1: ACTIVE LISTENING ══ -->
+  <div class="tool active" id="tool-listening">
+    <div class="tool-title">🎧 What Great Listeners Actually Do</div>
+    <div class="tool-sub">Tap each behaviour to mark it practiced. Great listening is a skill — not just staying quiet. It's two-way, constructive, and builds people up.</div>
+
+    <div class="sponge-box">
+      💡 <strong>Remember:</strong> A good listener isn't a sponge that absorbs — they're a <strong>trampoline</strong> that bounces ideas back. Two-way dialog, not silent reception.
+    </div>
+
+    <div class="listen-grid" id="practiceCards">
+      <div class="listen-card" onclick="toggleListen(this)" data-id="l1">
+        <span class="listen-check" id="chk-l1">⬜</span>
+        <div class="listen-num">1</div>
+        <div class="listen-head">Ask Discovery Questions</div>
+        <div class="listen-body">Ask questions that promote insight and new thinking — not yes/no questions. Create two-way dialog that's constructive for both people.</div>
+      </div>
+      <div class="listen-card" onclick="toggleListen(this)" data-id="l2">
+        <span class="listen-check" id="chk-l2">⬜</span>
+        <div class="listen-num">2</div>
+        <div class="listen-head">Build Self-Esteem</div>
+        <div class="listen-body">Interactions should lift the other person. Create a safe environment where they feel comfortable sharing issues and differences without judgment.</div>
+      </div>
+      <div class="listen-card" onclick="toggleListen(this)" data-id="l3">
+        <span class="listen-check" id="chk-l3">⬜</span>
+        <div class="listen-num">3</div>
+        <div class="listen-head">Co-operative Conversation</div>
+        <div class="listen-body">Feedback flows both directions. Challenge or disagree without making the other person defensive. You can have a different view and still be kind.</div>
+      </div>
+      <div class="listen-card" onclick="toggleListen(this)" data-id="l4">
+        <span class="listen-check" id="chk-l4">⬜</span>
+        <div class="listen-num">4</div>
+        <div class="listen-head">Make Skillful Suggestions</div>
+        <div class="listen-body">Offer ideas that open up alternative paths rather than closing conversation down. Suggestions should expand options, not push an agenda.</div>
+      </div>
+    </div>
+
+    <div class="levels-hdr">📶 6 Levels of Listening — tap to check off</div>
+    <div class="levels-list" id="levelsList">
+      <div class="level-row" onclick="toggleLevel(this)">
+        <div class="level-num">1</div>
+        <div class="level-text">
+          <div class="level-title">Create a safe environment to discuss</div>
+          <div class="level-desc">The other person needs to feel safe enough to be honest. No interrupting, no eye-rolling, no judgment.</div>
+        </div>
+        <span style="font-size:16px;margin-left:8px" class="lvl-chk">⬜</span>
+      </div>
+      <div class="level-row" onclick="toggleLevel(this)">
+        <div class="level-num">2</div>
+        <div class="level-text">
+          <div class="level-title">Clear away distractions and make eye contact</div>
+          <div class="level-desc">Phone down. Body turned toward them. Eyes on the person, not the room.</div>
+        </div>
+        <span style="font-size:16px;margin-left:8px" class="lvl-chk">⬜</span>
+      </div>
+      <div class="level-row" onclick="toggleLevel(this)">
+        <div class="level-num">3</div>
+        <div class="level-text">
+          <div class="level-title">Understand the substance — ask and confirm</div>
+          <div class="level-desc">Don't assume you understood. Reflect back what you heard. Ask follow-up questions to deepen understanding.</div>
+        </div>
+        <span style="font-size:16px;margin-left:8px" class="lvl-chk">⬜</span>
+      </div>
+      <div class="level-row" onclick="toggleLevel(this)">
+        <div class="level-num">4</div>
+        <div class="level-text">
+          <div class="level-title">Observe non-verbal clues — 80% of communication</div>
+          <div class="level-desc">What does their posture say? Their face? Their pace of speech? The words are only 20% of the message.</div>
+        </div>
+        <span style="font-size:16px;margin-left:8px" class="lvl-chk">⬜</span>
+      </div>
+      <div class="level-row" onclick="toggleLevel(this)">
+        <div class="level-num">5</div>
+        <div class="level-text">
+          <div class="level-title">Understand emotions and feelings — empathize</div>
+          <div class="level-desc">Don't just hear the content; feel what they're feeling. Empathy isn't agreeing — it's understanding.</div>
+        </div>
+        <span style="font-size:16px;margin-left:8px" class="lvl-chk">⬜</span>
+      </div>
+      <div class="level-row" onclick="toggleLevel(this)">
+        <div class="level-num">6</div>
+        <div class="level-text">
+          <div class="level-title">Help the other person see the issue in a different light</div>
+          <div class="level-desc">The highest level of listening. You help them reframe, see new options, and feel less stuck — without telling them what to do.</div>
+        </div>
+        <span style="font-size:16px;margin-left:8px" class="lvl-chk">⬜</span>
+      </div>
+    </div>
+    <button class="listen-reset" onclick="resetListening()">↺ Reset checklist</button>
+  </div>
+
+  <!-- ══ TOOL 2: PROBLEM SOLVING WHEEL ══ -->
+  <div class="tool" id="tool-wheel">
+    <div class="tool-title">🎡 Problem Solving Wheel</div>
+    <div class="tool-sub">Spin the wheel when you're stuck on a problem. Or tap one of the 8 strategies below to choose your approach. There's always something you CAN do.</div>
+    <div class="wheel-wrap">
+      <div class="wheel-svg-wrap" id="wheelWrap" onclick="spinWheel()">
+        <svg viewBox="0 0 300 300" id="wheelSVG">
+          <!-- 8 segments, each 45° -->
+          <g id="wheelG">
+            <!-- Segment 1: Walk away -->
+            <path d="M150,150 L150,10 A140,140 0 0,1 248.99,51.01 Z" fill="#f97316"/>
+            <text transform="rotate(22.5,150,150)" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff" x="150" y="52">Walk Away</text>
+            <text transform="rotate(22.5,150,150)" text-anchor="middle" font-family="Nunito" font-size="9.5" fill="#fff" x="150" y="64">& let it go</text>
+            <!-- Segment 2: Tell them to stop -->
+            <path d="M150,150 L248.99,51.01 A140,140 0 0,1 290,150 Z" fill="#dc2626"/>
+            <text transform="rotate(67.5,150,150)" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff" x="150" y="52">Tell Them</text>
+            <text transform="rotate(67.5,150,150)" text-anchor="middle" font-family="Nunito" font-size="9.5" fill="#fff" x="150" y="64">to stop!</text>
+            <!-- Segment 3: Go to another activity -->
+            <path d="M150,150 L290,150 A140,140 0 0,1 248.99,248.99 Z" fill="#8b5cf6"/>
+            <text transform="rotate(112.5,150,150)" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff" x="150" y="52">Go to</text>
+            <text transform="rotate(112.5,150,150)" text-anchor="middle" font-family="Nunito" font-size="9.5" fill="#fff" x="150" y="64">another activity</text>
+            <!-- Segment 4: Rock paper scissors -->
+            <path d="M150,150 L248.99,248.99 A140,140 0 0,1 150,290 Z" fill="#16a34a"/>
+            <text transform="rotate(157.5,150,150)" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff" x="150" y="52">Rock Paper</text>
+            <text transform="rotate(157.5,150,150)" text-anchor="middle" font-family="Nunito" font-size="9.5" fill="#fff" x="150" y="64">Scissors, Go!</text>
+            <!-- Segment 5: Use an I message -->
+            <path d="M150,150 L150,290 A140,140 0 0,1 51.01,248.99 Z" fill="#0284c7"/>
+            <text transform="rotate(202.5,150,150)" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff" x="150" y="52">Use an</text>
+            <text transform="rotate(202.5,150,150)" text-anchor="middle" font-family="Nunito" font-size="9.5" fill="#fff" x="150" y="64">I message</text>
+            <!-- Segment 6: Apologize -->
+            <path d="M150,150 L51.01,248.99 A140,140 0 0,1 10,150 Z" fill="#ca8a04"/>
+            <text transform="rotate(247.5,150,150)" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff" x="150" y="52">Apologize</text>
+            <text transform="rotate(247.5,150,150)" text-anchor="middle" font-family="Nunito" font-size="9.5" fill="#fff" x="150" y="64">& mean it</text>
+            <!-- Segment 7: Talk it out -->
+            <path d="M150,150 L10,150 A140,140 0 0,1 51.01,51.01 Z" fill="#ec4899"/>
+            <text transform="rotate(292.5,150,150)" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff" x="150" y="52">Talk</text>
+            <text transform="rotate(292.5,150,150)" text-anchor="middle" font-family="Nunito" font-size="9.5" fill="#fff" x="150" y="64">it out</text>
+            <!-- Segment 8: Wait and cool off -->
+            <path d="M150,150 L51.01,51.01 A140,140 0 0,1 150,10 Z" fill="#0d9488"/>
+            <text transform="rotate(337.5,150,150)" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="11" fill="#fff" x="150" y="52">Wait &</text>
+            <text transform="rotate(337.5,150,150)" text-anchor="middle" font-family="Nunito" font-size="9.5" fill="#fff" x="150" y="64">cool off</text>
+          </g>
+          <!-- Centre circle -->
+          <circle cx="150" cy="150" r="42" fill="#1a1206" stroke="#fff" stroke-width="3"/>
+          <text text-anchor="middle" font-family="Nunito" font-weight="900" font-size="11" fill="#fff" x="150" y="147">What Can</text>
+          <text text-anchor="middle" font-family="Nunito" font-weight="900" font-size="11" fill="#f59e0b" x="150" y="160">I Do?</text>
+          <!-- Pointer -->
+          <polygon points="150,2 143,18 157,18" fill="#1a1206" stroke="#fff" stroke-width="2"/>
+        </svg>
+      </div>
+
+      <div class="wheel-result empty" id="wheelResult">Tap the wheel or spin to get a strategy →</div>
+      <button class="wheel-btn" onclick="spinWheel()">🎡 Spin the Wheel</button>
+
+      <div class="wheel-options">
+        <div class="wo" onclick="pickOption('Walk Away & Let It Go',this)">🚶 Walk Away & Let It Go</div>
+        <div class="wo" onclick="pickOption('Tell Them to Stop!',this)">✋ Tell Them to Stop!</div>
+        <div class="wo" onclick="pickOption('Go to Another Activity',this)">🎮 Go to Another Activity</div>
+        <div class="wo" onclick="pickOption('Rock Paper Scissors!',this)">✊ Rock Paper Scissors!</div>
+        <div class="wo" onclick="pickOption('Use an I Message',this)">💬 Use an I Message</div>
+        <div class="wo" onclick="pickOption('Apologize & Mean It',this)">🤝 Apologize & Mean It</div>
+        <div class="wo" onclick="pickOption('Talk It Out',this)">🗣️ Talk It Out</div>
+        <div class="wo" onclick="pickOption('Wait & Cool Off',this)">⏱️ Wait & Cool Off</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TOOL 3: BODY CALMING TOOLKIT ══ -->
+  <div class="tool" id="tool-calming">
+    <div class="tool-title">🧘 Body Calming Strategies</div>
+    <div class="tool-sub">Tap any card to see full instructions. Your body is trying to help you — these strategies work WITH it. Use one when you feel big feelings building up.</div>
+    <div class="calm-grid">
+
+      <div class="calm-section-lbl">Quick Sensory Resets</div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">🙌</div>
+        <div class="calm-name">Sit On Your Hands</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Sit down and place both hands flat under your thighs. Feel the pressure and warmth. Breathe slowly while you count to 10. The weight and pressure gives your nervous system something to focus on.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">🤐</div>
+        <div class="calm-name">Squeeze Lips & Swallow Words</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Press your lips together firmly. Swallow any words that might come out too hot right now. Take a slow breath through your nose. This gives your body a moment before reacting.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">✊</div>
+        <div class="calm-name">Squeeze a Fist or Object</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Make a tight fist or squeeze a stress ball / putty. Hold for 5 seconds. Release slowly. Repeat 3-5 times. The physical squeeze gives your body a safe place to put the big feeling.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">👁️</div>
+        <div class="calm-name">Squeeze Your Eyes Shut</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Close your eyes tightly. Scrunch up your whole face — nose, cheeks, forehead. Hold for 3 seconds. Release completely. The contrast between tension and release is calming to the nervous system.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">💬</div>
+        <div class="calm-name">Positive Self-Talk</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Say quietly (or in your head): "I can do this." "This feeling will pass." "I am safe." "I am in control of my choices." Choose your own phrase and repeat it like a quiet chant. Words change body states.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">🖐️</div>
+        <div class="calm-name">5-Finger Breathing</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Hold one hand out flat. Use the other hand's pointer finger to trace: breathe IN as you trace up each finger, breathe OUT as you trace down. One full hand = five slow, complete breaths.</div>
+      </div>
+
+      <div class="calm-section-lbl">Deeper Strategies</div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">🦅</div>
+        <div class="calm-name">Hawk Hug</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Cross your arms across your chest and hold your shoulders. Breathe in and out slowly. Pretend your arms are wings — flap them gently against your shoulders, then give yourself a final hug to finish. The cross-body motion is deeply regulating.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">🔥</div>
+        <div class="calm-name">Fire Hands</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Rub your hands together like you're trying to start a fire. Start slow, speed up, then slow back down as you feel the warmth. Focus on the heat and sensation. As your hands warm up, your breathing naturally slows.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">❤️</div>
+        <div class="calm-name">Hand Over Heart</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Place your hand flat over your heart. Try to feel your heartbeat. Take 3 slow, deep breaths and feel your chest rise and fall. Connecting to your heartbeat anchors you in your body and slows your heart rate.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">🧍</div>
+        <div class="calm-name">Shoulder Shrug</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Sitting or standing, raise your shoulders slowly toward your ears. Pause at the top. Lower them slowly. Breathe out on the way down. Try raising one shoulder at a time. Repeat 5 times. Releases tension held in the neck and upper back.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">💺</div>
+        <div class="calm-name">Chair Push-Ups</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Sit in a chair. Hold the seat firmly under your legs. Push your bottom and legs up off the chair. Hold for 3 seconds. Lower slowly. Repeat 5-8 times. The proprioceptive input (pushing and pressing) is calming for the nervous system.</div>
+      </div>
+
+      <div class="calm-card" onclick="toggleCalm(this)">
+        <div class="calm-em">🤲</div>
+        <div class="calm-name">Open Shut Them</div>
+        <div class="calm-tap">Tap for details</div>
+        <div class="calm-detail">Clench both fists tightly. Slowly release and stretch fingers wide. Then do the same with your feet (in shoes or out). Then your eyes. Feel each body part tense up and let go. Finish by breathing out everything remaining.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ TOOL 4: ZONES OF REGULATION ══ -->
+  <div class="tool" id="tool-zones">
+    <div class="tool-title">🟦 What Zone Are You In?</div>
+    <div class="tool-sub">Tap any strategy to mark it tried. Each zone is a body state — not a "good" or "bad" feeling. The goal is to notice your zone and choose a strategy to help.</div>
+
+    <div class="zones-grid">
+
+      <div class="zone-col zone-blue">
+        <div class="zone-hdr">
+          <div class="zone-emoji">😔</div>
+          <div class="zone-name">Blue</div>
+          <div style="font-size:11px;margin-top:3px;opacity:0.85">Low energy · sad · tired · bored</div>
+        </div>
+        <div class="zone-body" id="zone-blue">
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Get or give a hug</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Talk to friends & family</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Get some fresh air</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Go for a run</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Watch a favourite show</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Do a hobby you enjoy</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Stretch your body</div></div>
+        </div>
+      </div>
+
+      <div class="zone-col zone-green">
+        <div class="zone-hdr">
+          <div class="zone-emoji">😊</div>
+          <div class="zone-name">Green</div>
+          <div style="font-size:11px;margin-top:3px;opacity:0.85">Calm · happy · focused · ready</div>
+        </div>
+        <div class="zone-body" id="zone-green">
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Smile & practice gratitude</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Help someone else</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Use kind & positive words</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Take steps toward your goals</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Keep listening</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Write in a journal</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Meditation</div></div>
+        </div>
+      </div>
+
+      <div class="zone-col zone-yellow">
+        <div class="zone-hdr">
+          <div class="zone-emoji">😬</div>
+          <div class="zone-name">Yellow</div>
+          <div style="font-size:11px;margin-top:3px;opacity:0.85">Anxious · silly · frustrated · excited</div>
+        </div>
+        <div class="zone-body" id="zone-yellow">
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Take deep breaths</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Take a break</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Ask for help</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Use positive self-talk</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Relax & stay optimistic</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Think of a peaceful place</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Take a bath or shower</div></div>
+        </div>
+      </div>
+
+      <div class="zone-col zone-red">
+        <div class="zone-hdr">
+          <div class="zone-emoji">😡</div>
+          <div class="zone-name">Red</div>
+          <div style="font-size:11px;margin-top:3px;opacity:0.85">Angry · overwhelmed · out of control</div>
+        </div>
+        <div class="zone-body" id="zone-red">
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Count to 10 or 100</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Tell someone you trust</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Stop and walk away</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Tense & relax your muscles</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Listen to music</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Take a timeout</div></div>
+          <div class="zone-item" onclick="checkZone(this)"><div class="zone-dot"></div><div class="zone-text">Practice grounding technique</div></div>
+        </div>
+      </div>
+
+    </div>
+    <button class="zones-reset" onclick="resetZones()">↺ Reset all zones</button>
+  </div>
+
+</div>
+
+<script>
+/* ── Tab switching ── */
+function showTool(id, el){
+  document.querySelectorAll('.tool').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tool-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+/* ── Tool 1: Listening ── */
+function toggleListen(card){
+  const done = card.classList.toggle('done');
+  const id = card.dataset.id;
+  document.getElementById('chk-'+id).textContent = done ? '✅' : '⬜';
+}
+function toggleLevel(row){
+  const done = row.classList.toggle('done');
+  row.querySelector('.lvl-chk').textContent = done ? '✅' : '⬜';
+}
+function resetListening(){
+  document.querySelectorAll('.listen-card.done').forEach(c=>{
+    c.classList.remove('done');
+    document.getElementById('chk-'+c.dataset.id).textContent='⬜';
+  });
+  document.querySelectorAll('.level-row.done').forEach(r=>{
+    r.classList.remove('done');
+    r.querySelector('.lvl-chk').textContent='⬜';
+  });
+}
+
+/* ── Tool 2: Problem Solving Wheel ── */
+const segments=['Walk Away & Let It Go','Tell Them to Stop!','Go to Another Activity','Rock Paper Scissors!','Use an I Message','Apologize & Mean It','Talk It Out','Wait & Cool Off'];
+let spinning=false, currentDeg=0;
+function spinWheel(){
+  if(spinning) return;
+  spinning=true;
+  document.getElementById('wheelResult').className='wheel-result empty';
+  document.getElementById('wheelResult').textContent='Spinning…';
+  document.querySelectorAll('.wo').forEach(w=>w.classList.remove('picked'));
+  const extra = 1440 + Math.floor(Math.random()*360);
+  currentDeg += extra;
+  document.getElementById('wheelG').style.transform=`rotate(${currentDeg}deg)`;
+  document.getElementById('wheelG').style.transformOrigin='150px 150px';
+  setTimeout(()=>{
+    spinning=false;
+    const normalised = ((currentDeg % 360) + 360) % 360;
+    const segIdx = Math.floor(((360 - normalised + 337.5) % 360) / 45) % 8;
+    const result = segments[segIdx];
+    document.getElementById('wheelResult').className='wheel-result';
+    document.getElementById('wheelResult').textContent='👉 ' + result;
+    document.querySelectorAll('.wo').forEach(w=>{
+      if(w.textContent.includes(result.split('&')[0].trim().split('!')[0].trim())) w.classList.add('picked');
+    });
+  }, 900);
+}
+function pickOption(txt, el){
+  document.querySelectorAll('.wo').forEach(w=>w.classList.remove('picked'));
+  el.classList.add('picked');
+  document.getElementById('wheelResult').className='wheel-result';
+  document.getElementById('wheelResult').textContent='👉 '+txt;
+}
+
+/* ── Tool 3: Calming ── */
+function toggleCalm(card){
+  const wasOpen = card.classList.contains('open');
+  document.querySelectorAll('.calm-card.open').forEach(c=>c.classList.remove('open'));
+  if(!wasOpen) card.classList.add('open');
+  const tap = card.querySelector('.calm-tap');
+  if(tap) tap.textContent = card.classList.contains('open') ? 'Tap to close ↑' : 'Tap for details';
+}
+
+/* ── Tool 4: Zones ── */
+function checkZone(item){
+  item.classList.toggle('checked');
+}
+function resetZones(){
+  document.querySelectorAll('.zone-item.checked').forEach(i=>i.classList.remove('checked'));
+}
+</script>
+</body>
+</html>

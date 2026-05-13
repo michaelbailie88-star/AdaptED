@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>adaptED Supply Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#07080f;--paper:rgba(255,255,255,.05);--border:rgba(255,255,255,.08);
+  --orange:#f97316;--blue:#0088ff;--green:#22c55e;--purple:#7c3aed;--red:#ef4444;
+  --muted:rgba(255,255,255,.5);--dim:rgba(255,255,255,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#fff;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:
+  radial-gradient(ellipse 60% 40% at 20% 10%,rgba(0,136,255,.07) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 50% at 80% 80%,rgba(249,115,22,.05) 0%,transparent 60%)}
+
+.page{max-width:420px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.screen{display:none;flex-direction:column;flex:1;animation:fadeIn .28s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+  background:rgba(7,8,15,.97);border-bottom:1px solid rgba(255,255,255,.06);
+  backdrop-filter:blur(20px);flex-shrink:0;position:sticky;top:0;z-index:50}
+.nav-logo{font-family:'Fraunces',serif;font-size:18px;font-weight:900;
+  background:linear-gradient(135deg,#60a5fa,#34d399);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-tag{font-size:10px;font-weight:700;color:rgba(0,136,255,.9);
+  background:rgba(0,136,255,.1);border:1px solid rgba(0,136,255,.2);
+  padding:4px 10px;border-radius:100px}
+.nav-back{background:none;border:none;color:var(--muted);font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;padding:6px;display:flex;align-items:center;gap:4px}
+.nav-back:hover{color:#fff}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;padding-bottom:24px}
+.content::-webkit-scrollbar{display:none}
+
+/* BUTTONS */
+.btn{width:100%;padding:14px;border-radius:14px;color:#fff;font-weight:800;font-size:14px;
+  border:none;font-family:inherit;cursor:pointer;transition:all .2s;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn:active{transform:translateY(1px);filter:brightness(.95)}
+.btn-blue{background:linear-gradient(135deg,#0088ff,#0055cc);
+  box-shadow:0 6px 20px -6px rgba(0,136,255,.55),inset 0 1px 0 rgba(255,255,255,.15)}
+.btn-orange{background:linear-gradient(135deg,#f97316,#ea580c);
+  box-shadow:0 6px 20px -6px rgba(249,115,22,.55),inset 0 1px 0 rgba(255,255,255,.15)}
+.btn-green{background:linear-gradient(135deg,#22c55e,#16a34a);
+  box-shadow:0 6px 20px -6px rgba(34,197,94,.55),inset 0 1px 0 rgba(255,255,255,.15)}
+.btn-ghost{background:none;border:1.5px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{background:rgba(255,255,255,.06);color:#fff}
+.btn-red{background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.25);color:#f87171}
+.btn-red:hover{background:rgba(239,68,68,.18)}
+
+/* FORM */
+.lbl{font-size:10px;font-weight:800;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+.inp{width:100%;padding:12px 14px;border-radius:13px;background:rgba(255,255,255,.05);
+  border:1.5px solid var(--border);color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px}
+.inp:focus{border-color:rgba(0,136,255,.5);background:rgba(0,136,255,.05)}
+.inp::placeholder{color:var(--dim)}
+.ta{width:100%;padding:12px 14px;border-radius:13px;background:rgba(255,255,255,.05);
+  border:1.5px solid var(--border);color:#fff;font-size:13px;font-family:inherit;
+  outline:none;resize:none;line-height:1.6;margin-bottom:14px}
+.ta:focus{border-color:rgba(0,136,255,.5)}
+.ta::placeholder{color:var(--dim)}
+
+/* INFO BOX */
+.ibox{border-radius:13px;padding:12px 14px;font-size:12px;line-height:1.6;margin-bottom:12px}
+.ibox.orange{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.18);color:rgba(255,255,255,.8)}
+.ibox.green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);color:rgba(255,255,255,.8)}
+.ibox.blue{background:rgba(0,136,255,.08);border:1px solid rgba(0,136,255,.18);color:rgba(255,255,255,.8)}
+.ibox.red{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:rgba(255,255,255,.8)}
+.ibox strong{color:var(--orange)}
+.ibox.green strong{color:#4ade80}
+.ibox.blue strong{color:#60a5fa}
+
+/* CHAIN */
+.chain{background:rgba(0,136,255,.06);border:1.5px solid rgba(0,136,255,.15);border-radius:20px;padding:18px;margin-bottom:14px}
+.chain-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.chain-row:last-child{margin-bottom:0}
+.chain-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;margin-top:2px}
+.av-teacher{background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 4px 12px -4px rgba(249,115,22,.5)}
+.av-manager{background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 12px -4px rgba(34,197,94,.5)}
+.av-supply{background:linear-gradient(135deg,#7c3aed,#5b21b6);box-shadow:0 4px 12px -4px rgba(124,58,237,.5)}
+.chain-info{flex:1}
+.chain-role{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.chain-name{font-size:14px;font-weight:800;color:#fff}
+.chain-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.chain-arrow{font-size:16px;color:rgba(255,255,255,.15);text-align:center;margin:4px 0 4px 26px}
+
+/* PLAN LIST */
+.plan-row{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:1px solid var(--border);
+  border-radius:14px;padding:12px;margin-bottom:8px;transition:all .15s}
+.plan-row.done-act{opacity:.5;background:rgba(34,197,94,.04);border-color:rgba(34,197,94,.15)}
+.pr-time{font-size:11px;font-weight:800;color:var(--dim);min-width:34px;padding-top:2px}
+.pr-ico{font-size:22px;flex-shrink:0;line-height:1}
+.pr-body{flex:1}
+.pr-dur{font-size:10px;font-weight:700;color:rgba(249,115,22,.8);margin-bottom:1px}
+.pr-name{font-size:13px;font-weight:800;color:#fff;margin-bottom:1px}
+.pr-note{font-size:11px;color:var(--muted)}
+.pr-done{font-size:11px;font-weight:700;color:#4ade80;float:right;margin-top:2px}
+
+/* PROGRESS */
+.prog-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.prog-track{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#0088ff,#00ccff);transition:width .6s ease}
+.prog-txt{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+
+/* BIG ACTIVITY CARD */
+.act-card{background:linear-gradient(145deg,rgba(0,60,140,.15),rgba(0,40,100,.08));
+  border:1.5px solid rgba(0,136,255,.22);border-radius:24px;padding:20px;margin-bottom:12px;
+  box-shadow:0 12px 40px -12px rgba(0,0,0,.6)}
+.ac-em{font-size:54px;display:block;text-align:center;margin-bottom:10px;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
+.ac-cat{text-align:center;font-size:10px;font-weight:800;color:#60a5fa;
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.ac-title{text-align:center;font-family:'Fraunces',serif;font-size:24px;
+  font-weight:900;color:#fff;margin-bottom:4px;line-height:1.2}
+.ac-meta{text-align:center;font-size:12px;color:var(--muted);margin-bottom:14px}
+.ac-timer{text-align:center;font-family:'Fraunces',serif;font-size:46px;
+  font-weight:900;color:#0099ff;text-shadow:0 0 30px rgba(0,153,255,.35);line-height:1;margin-bottom:2px}
+.ac-timer-lbl{text-align:center;font-size:10px;color:var(--dim);font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.ac-tbar{height:4px;background:rgba(255,255,255,.07);border-radius:100px;overflow:hidden;margin-bottom:14px}
+.ac-tfill{height:100%;border-radius:100px;background:linear-gradient(90deg,#0055cc,#00aaff);transition:width .5s linear}
+.steps{margin-bottom:2px}
+.step{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.step:last-child{border-bottom:none}
+.stepn{width:22px;height:22px;border-radius:50%;background:rgba(0,136,255,.18);
+  border:1px solid rgba(0,136,255,.35);color:#60a5fa;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.steptxt{font-size:13px;color:rgba(255,255,255,.85);line-height:1.5}
+
+/* BOTTOM BAR */
+.bottom-bar{padding:10px 16px 20px;background:rgba(7,8,15,.97);
+  border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;
+  position:sticky;bottom:0;backdrop-filter:blur(20px)}
+
+/* MOOD */
+.mood-row{display:flex;justify-content:space-between;margin-bottom:14px}
+.mood-opt{text-align:center;cursor:pointer;padding:8px;border-radius:12px;
+  border:1.5px solid transparent;transition:all .2s;flex:1}
+.mood-opt:hover{background:rgba(255,255,255,.04)}
+.mood-opt.sel{background:rgba(0,136,255,.1);border-color:rgba(0,136,255,.35)}
+.mood-em{font-size:26px;display:block;margin-bottom:3px}
+.mood-lbl{font-size:9px;font-weight:700;color:var(--dim)}
+.mood-opt.sel .mood-lbl{color:#60a5fa}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.chip{padding:7px 13px;border-radius:100px;background:rgba(255,255,255,.05);
+  border:1.5px solid var(--border);color:rgba(255,255,255,.6);font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+.chip.sel{background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.45);color:var(--orange)}
+.chip:hover:not(.sel){border-color:rgba(255,255,255,.2);color:#fff}
+
+/* SECTION LABEL */
+.slbl{font-size:11px;font-weight:800;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;
+  margin:14px 0 10px;display:flex;align-items:center;gap:8px}
+.slbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+
+/* NO PLAN */
+.no-plan{text-align:center;padding:40px 20px}
+.no-plan h2{font-family:'Fraunces',serif;font-size:22px;font-weight:900;margin-bottom:8px}
+.no-plan p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+
+/* REPORT CARD */
+.report-summary{background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.2);
+  border-radius:16px;padding:14px;margin-bottom:12px}
+.rs-title{font-size:12px;font-weight:700;color:#4ade80;margin-bottom:8px}
+.rs-stats{display:flex;gap:8px;flex-wrap:wrap}
+.rs-stat{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px}
+.rs-done{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.rs-skip{background:rgba(249,115,22,.12);color:#fb923c;border:1px solid rgba(249,115,22,.25)}
+.rs-add{background:rgba(124,58,237,.12);color:#c084fc;border:1px solid rgba(124,58,237,.25)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ══ SCREEN: CHAIN (landing when link is opened) ══ -->
+<div class="screen" id="s-chain">
+  <nav class="nav">
+    <div class="nav-logo">adaptED</div>
+    <div class="nav-tag">Supply Mode</div>
+  </nav>
+  <div class="content">
+    <div style="text-align:center;padding:18px 0 14px">
+      <div style="font-size:14px;color:var(--muted);margin-bottom:6px">Supply plan ready for you</div>
+      <h1 style="font-family:'Fraunces',serif;font-size:24px;font-weight:900;line-height:1.2;margin-bottom:4px">Good morning! 👋</h1>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5">Here's how this plan got to you:</p>
+    </div>
+
+    <div class="chain" id="chainDisplay">
+      <!-- populated by JS -->
+    </div>
+
+    <div style="background:rgba(0,136,255,.08);border:1.5px solid rgba(0,136,255,.2);border-radius:18px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+        <span style="font-size:20px">👶</span>
+        <div><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase">Class</div>
+        <div id="chainClass" style="font-size:14px;font-weight:800;color:#fff">—</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+        <span style="font-size:20px">⏱</span>
+        <div><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase">Today</div>
+        <div id="chainTime" style="font-size:14px;font-weight:800;color:#fff">—</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="font-size:20px">📦</span>
+        <div><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase">Materials</div>
+        <div style="font-size:14px;font-weight:800;color:#fff">Zero prep — nothing needed</div></div>
+      </div>
+    </div>
+
+    <div id="chainNote" style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:10px 13px;font-size:12px;color:rgba(255,255,255,.8);line-height:1.6;margin-bottom:18px;display:none"></div>
+
+    <button class="btn btn-blue" onclick="startDay()">I'm ready — start the day →</button>
+    <button class="btn btn-ghost" onclick="go('s-noPlan')">I don't have a plan</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: NO PLAN ══ -->
+<div class="screen" id="s-noPlan">
+  <nav class="nav">
+    <button class="nav-back" onclick="go('s-chain')">← Back</button>
+    <div class="nav-logo">Quick Plan</div>
+    <div style="width:60px"></div>
+  </nav>
+  <div class="content">
+    <div style="text-align:center;padding:16px 0 18px">
+      <div style="font-size:38px;margin-bottom:8px">⚡</div>
+      <h2 style="font-family:'Fraunces',serif;font-size:22px;font-weight:900;margin-bottom:6px">Two questions. That's it.</h2>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5">Zero-prep plan in 10 seconds.</p>
+    </div>
+    <div class="lbl">How old are the kids?</div>
+    <div class="chips" id="qa-chips">
+      <div class="chip" onclick="qChip(this,'qa')">🍼 Under 3</div>
+      <div class="chip sel" onclick="qChip(this,'qa')">🧸 3–5</div>
+      <div class="chip" onclick="qChip(this,'qa')">📚 6–9</div>
+      <div class="chip" onclick="qChip(this,'qa')">🎒 10–14</div>
+      <div class="chip" onclick="qChip(this,'qa')">🎓 14+</div>
+    </div>
+    <div class="lbl">How long is your session?</div>
+    <div class="chips" id="qt-chips">
+      <div class="chip" onclick="qChip(this,'qt')">30 min</div>
+      <div class="chip" onclick="qChip(this,'qt')">1 hour</div>
+      <div class="chip sel" onclick="qChip(this,'qt')">2 hours</div>
+      <div class="chip" onclick="qChip(this,'qt')">Half day</div>
+    </div>
+    <div class="lbl">Your name</div>
+    <input class="inp" id="quickName" type="text" placeholder="Your name">
+    <div class="ibox orange">⚡ <strong>Zero prep guaranteed.</strong> Everything works with just a room and the kids.</div>
+    <button class="btn btn-orange" onclick="buildQuickAndStart()">Build my plan →</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: ACTIVITY VIEW ══ -->
+<div class="screen" id="s-activity">
+  <nav class="nav">
+    <button class="nav-back" onclick="confirmBack()">← Plan</button>
+    <div class="nav-tag" id="actNavTag">Activity 1</div>
+    <button onclick="go('s-browse')" style="background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:9px;color:rgba(255,255,255,.7);font-size:11px;font-weight:700;padding:6px 11px;cursor:pointer;font-family:inherit">+ Add</button>
+  </nav>
+  <div style="padding:8px 16px 0;flex-shrink:0">
+    <div class="prog-row">
+      <div class="prog-track"><div class="prog-fill" id="actProg"></div></div>
+      <div class="prog-txt" id="actProgTxt">1 of 5</div>
+    </div>
+  </div>
+  <div class="content" style="padding-top:8px;padding-bottom:0">
+    <div class="act-card">
+      <span class="ac-em" id="actEm">🌈</span>
+      <div class="ac-cat" id="actCat">Opening</div>
+      <div class="ac-title" id="actTitle">Name &amp; Weather Game</div>
+      <div class="ac-meta" id="actMeta">Zero prep · 15 min</div>
+      <div class="ac-timer" id="actTimer">15:00</div>
+      <div class="ac-timer-lbl">time remaining</div>
+      <div class="ac-tbar"><div class="ac-tfill" id="actTimerFill" style="width:99%"></div></div>
+      <div class="steps" id="actSteps"></div>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <button class="btn btn-blue" style="margin-bottom:8px" onclick="markDoneNext()">✓ Done — next activity →</button>
+    <button style="width:100%;padding:8px;background:none;border:none;color:var(--dim);font-size:12px;font-family:inherit;cursor:pointer" onclick="skipAct()">Skip this →</button>
+    <button class="btn btn-red" style="margin-bottom:0" onclick="go('s-calm')">🚨 Class is out of control</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: BROWSE ACTIVITIES ══ -->
+<div class="screen" id="s-browse">
+  <nav class="nav">
+    <button class="nav-back" onclick="go('s-activity')">← Back</button>
+    <div class="nav-logo" style="font-size:15px">Add to today</div>
+    <div style="width:60px"></div>
+  </nav>
+  <div class="content">
+    <div class="ibox blue"><strong>Browse freely.</strong> Tap + to add any activity. All are zero prep.</div>
+    <div id="browseGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: CALM DOWN ══ -->
+<div class="screen" id="s-calm">
+  <nav class="nav">
+    <button class="nav-back" onclick="go('s-activity')">← Back to plan</button>
+    <div class="nav-tag" style="background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.25)">🚨 Help</div>
+    <div style="width:60px"></div>
+  </nav>
+  <div class="content">
+    <div style="text-align:center;padding:14px 0 16px">
+      <h2 style="font-family:'Fraunces',serif;font-size:22px;font-weight:900;margin-bottom:4px">It'll be okay. 🫁</h2>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5">Pick one. All take under 2 minutes.</p>
+    </div>
+    <div onclick="go('s-activity')" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:16px;padding:16px;margin-bottom:9px;cursor:pointer;transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+      <div style="font-size:26px;margin-bottom:6px">🫁</div>
+      <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px">Box Breathing</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">Everyone stands. In 4 → hold 4 → out 4 → hold 4. Repeat 3×. Do it with them — your calm is contagious.</div>
+    </div>
+    <div onclick="go('s-activity')" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:16px;padding:16px;margin-bottom:9px;cursor:pointer;transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+      <div style="font-size:26px;margin-bottom:6px">🧊</div>
+      <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px">Freeze &amp; Reset</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">Say FREEZE loudly. Complete silence. Count down from 10. New energy, new expectations — say it calmly.</div>
+    </div>
+    <div onclick="go('s-activity')" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:16px;padding:16px;margin-bottom:9px;cursor:pointer;transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+      <div style="font-size:26px;margin-bottom:6px">🦶</div>
+      <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px">Stomp It Out</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">10 stomps, 10 claps, then sit. Burns the chaos in a controlled way so they can refocus.</div>
+    </div>
+    <div onclick="go('s-activity')" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:16px;padding:16px;cursor:pointer;transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+      <div style="font-size:26px;margin-bottom:6px">✏️</div>
+      <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px">Silent Free Draw</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">Paper out, pencils out, silence. Draw anything. 5 minutes. Works every single time.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: END OF DAY REPORT ══ -->
+<div class="screen" id="s-report">
+  <nav class="nav">
+    <div class="nav-logo">End of Day</div>
+    <div class="nav-tag" style="background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.2)">Session complete</div>
+  </nav>
+  <div class="content">
+    <div style="text-align:center;padding:14px 0 18px">
+      <div style="font-size:42px;margin-bottom:8px">📋</div>
+      <h2 style="font-family:'Fraunces',serif;font-size:22px;font-weight:900;margin-bottom:4px">Great work today</h2>
+      <p id="reportDestination" style="font-size:13px;color:var(--muted);line-height:1.5">Send a quick report back to the classroom teacher.</p>
+    </div>
+
+    <div class="report-summary">
+      <div class="rs-title">✓ Auto-tracked today</div>
+      <div class="rs-stats" id="reportStats"></div>
+    </div>
+
+    <div class="slbl">How was the class today?</div>
+    <div class="mood-row" id="moodRow">
+      <div class="mood-opt" onclick="setMood(1)"><span class="mood-em">😤</span><div class="mood-lbl">Rough</div></div>
+      <div class="mood-opt" onclick="setMood(2)"><span class="mood-em">😐</span><div class="mood-lbl">Okay</div></div>
+      <div class="mood-opt sel" onclick="setMood(3)"><span class="mood-em">🙂</span><div class="mood-lbl">Good</div></div>
+      <div class="mood-opt" onclick="setMood(4)"><span class="mood-em">😄</span><div class="mood-lbl">Great</div></div>
+      <div class="mood-opt" onclick="setMood(5)"><span class="mood-em">🌟</span><div class="mood-lbl">Amazing</div></div>
+    </div>
+
+    <div class="slbl">Any incidents or flags?</div>
+    <div class="chips" id="incidentChips">
+      <div class="chip sel" onclick="chipToggle(this)">None</div>
+      <div class="chip" onclick="chipToggle(this)">Minor behaviour</div>
+      <div class="chip" onclick="chipToggle(this)">Injury</div>
+      <div class="chip" onclick="chipToggle(this)">Allergy concern</div>
+      <div class="chip" onclick="chipToggle(this)">Child left early</div>
+    </div>
+
+    <div class="lbl">Notes for the classroom teacher</div>
+    <textarea class="ta" id="reportNotes" rows="4" placeholder="Anything the teacher should know about today…"></textarea>
+
+    <div class="ibox blue" id="reportToBox"></div>
+
+    <button class="btn btn-green" onclick="submitReport()">📤 Send report</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN: REPORT SENT ══ -->
+<div class="screen" id="s-sent">
+  <nav class="nav">
+    <div class="nav-logo">adaptED</div>
+    <div class="nav-tag" style="background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.2)">Done ✓</div>
+  </nav>
+  <div class="content" style="text-align:center;padding-top:40px">
+    <div style="font-size:64px;margin-bottom:16px;animation:fadeIn .5s ease">✅</div>
+    <h2 style="font-family:'Fraunces',serif;font-size:26px;font-weight:900;margin-bottom:8px">Report sent!</h2>
+    <p id="sentMessage" style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px"></p>
+    <div style="background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.2);border-radius:18px;padding:16px;margin-bottom:20px;text-align:left" id="sentSummary"></div>
+    <p style="font-size:12px;color:var(--dim)">You can now close this page.</p>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// ══ ACTIVITY DATA ══
+const ACTS = [
+  {em:'🌈',cat:'Opening Circle',title:'Name & Weather Game',mins:15,steps:['Sit in a circle on the floor','Each child says their name and today\'s weather','Move on if someone freezes — come back to them','End with "Good morning everyone!" together'],energy:'low'},
+  {em:'🐘',cat:'Active / Gross Motor',title:'Animal Walks',mins:20,steps:['Stand up and spread around the room','Demonstrate: elephant stomp, bunny hop, crab walk','Kids call out a new animal each round','End with the silliest animal they can invent'],energy:'high'},
+  {em:'🎭',cat:'Active / Whole Class',title:'Freeze Tag Variations',mins:25,steps:['Take class outside or to the gym','One person is "it" — when tagged, freeze in place','Others unfreeze by crawling under your legs','Switch "it" every 3 minutes'],energy:'high'},
+  {em:'✏️',cat:'Quiet / Individual',title:'Draw Your Dream Bedroom',mins:30,steps:['Give everyone a blank piece of paper','Draw your dream bedroom — include everything','Work in silence for 20–25 minutes','Optional: share with the class'],energy:'low'},
+  {em:'🔢',cat:'Social / Whole Class',title:'Human Bingo',mins:30,steps:['Each student draws a 4x4 grid on paper','Fill squares with traits: "Has a pet", "Born elsewhere"','Walk around finding classmates who match','First to complete a line wins'],energy:'med'},
+  {em:'🌅',cat:'Closing Circle',title:'Rose & Thorn',mins:15,steps:['Sit back in a circle','Each shares one Rose (good) and one Thorn (hard)','No judgment — just listening','Thank the class by name'],energy:'low'},
+  {em:'🎤',cat:'Creative / Debate',title:'Mini Debates',mins:30,steps:['Pick a topic: "Homework should be banned"','Split class in two randomly','5 minutes to prepare, 2 minutes each to argue','Vote on the winner'],energy:'med'},
+  {em:'🧮',cat:'Maths / Movement',title:'Jump Count',mins:20,steps:['Stand up, spread out','Count to 100 by 2s — jump on each number','Try 5s, then 10s','Who can count backwards from 20 fastest?'],energy:'high'},
+  {em:'🎨',cat:'Creative / Quiet',title:'Free Art Time',mins:25,steps:['Paper on desks, pencils out','No prompt — draw anything','Complete silence for 20 minutes','No wrong answers'],energy:'low'},
+  {em:'📖',cat:'Literacy / Quiet',title:'Silent Reading + Share',mins:20,steps:['Find any book in the room','Read silently for 15 minutes','Share one sentence you liked','What would you tell a friend about it?'],energy:'low'},
+  {em:'🧘',cat:'Regulation / Quiet',title:'Body Scan Breathing',mins:10,steps:['Sit or lie down comfortably','Eyes closed, breathe slowly','Name 5 things you can feel in your body','Open eyes slowly — how do you feel?'],energy:'low'},
+  {em:'🎵',cat:'Music / Movement',title:'Rhythm Clap Along',mins:15,steps:['Start a simple clap pattern','Students mirror it back','Increase complexity each round','Finish with a big group clap'],energy:'med'},
+];
+
+// ══ STATE ══
+let plan = [];           // {act, status:'pending'|'done'|'skipped', addedBy:'plan'|'supply'}
+let actIdx = 0;          // current activity index
+let timerSecs = 0;
+let timerMax = 900;
+let timerInterval = null;
+let moodScore = 3;
+let teacherName = '';
+let teacherOrg = '';
+let teacherRoom = '';
+let teacherEmail = '';
+let managerName = '';
+let supplyName = '';
+let planNote = '';
+let planAge = '';
+let planTime = '';
+let isFromLink = false;
+
+// ══ INIT — READ URL PARAMS ══
+(function init(){
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('plan');
+  if(raw){
+    try{
+      const data = JSON.parse(decodeURIComponent(escape(atob(raw))));
+      teacherName  = data.teacher || '';
+      teacherOrg   = data.org     || '';
+      teacherRoom  = data.room    || '';
+      teacherEmail = data.email   || '';
+      planAge      = data.age     || '';
+      planTime     = data.time    || '2 hours';
+      planNote     = data.note    || '';
+      const actTitles = data.plan || [];
+      plan = actTitles
+        .map(t => ACTS.find(a => a.title === t))
+        .filter(Boolean)
+        .map(a => ({act:a, status:'pending', addedBy:'plan'}));
+      if(!plan.length) buildDefaultPlan();
+      isFromLink = true;
+      buildChainUI();
+      go('s-chain');
+    } catch(e){
+      console.error('Bad plan param:', e);
+      go('s-noPlan');
+    }
+  } else {
+    buildDefaultPlan();
+    go('s-noPlan');
+  }
+})();
+
+function buildDefaultPlan(){
+  const shuffled = [...ACTS].sort(() => Math.random() - .5);
+  const acts = shuffled.slice(0,5);
+  acts[0] = ACTS[0]; // always open with Name & Weather
+  acts[acts.length-1] = ACTS[5]; // always close with Rose & Thorn
+  plan = acts.map(a => ({act:a, status:'pending', addedBy:'plan'}));
+}
+
+// ══ CHAIN UI ══
+function buildChainUI(){
+  const el = document.getElementById('chainDisplay');
+  const classEl = document.getElementById('chainClass');
+  const timeEl  = document.getElementById('chainTime');
+  const noteEl  = document.getElementById('chainNote');
+
+  classEl.textContent = planAge || 'See teacher note';
+  timeEl.textContent  = planTime + ' · ' + plan.length + ' activities ready';
+
+  if(planNote){
+    noteEl.style.display = 'block';
+    noteEl.innerHTML = '<span style="color:#f97316;font-weight:700">📝 Note from ' + (teacherName||'teacher') + ':</span> ' + planNote;
+  }
+
+  // Build the chain rows
+  el.innerHTML = `
+    <div class="chain-row">
+      <div class="chain-av av-teacher">🧑‍🏫</div>
+      <div class="chain-info">
+        <div class="chain-role">Plan built by</div>
+        <div class="chain-name">${teacherName||'Classroom Teacher'}</div>
+        <div class="chain-sub">${[teacherOrg,teacherRoom].filter(Boolean).join(' · ')||'adaptED vault'}</div>
+      </div>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-row">
+      <div class="chain-av av-manager">👩‍💼</div>
+      <div class="chain-info">
+        <div class="chain-role">Forwarded by manager</div>
+        <input class="inp" style="margin:4px 0 0;padding:8px 12px;font-size:13px"
+          type="text" id="managerNameInp" placeholder="Manager's name (optional)"
+          value="${managerName}">
+      </div>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-row">
+      <div class="chain-av av-supply">🙋</div>
+      <div class="chain-info">
+        <div class="chain-role">Supply teacher — that's you</div>
+        <input class="inp" style="margin:4px 0 0;padding:8px 12px;font-size:13px"
+          type="text" id="supplyNameInp" placeholder="Your name (required)"
+          value="${supplyName}">
+      </div>
+    </div>
+  `;
+}
+
+function startDay(){
+  const snInp = document.getElementById('supplyNameInp');
+  const mnInp = document.getElementById('managerNameInp');
+  supplyName  = (snInp ? snInp.value.trim() : '') || 'Supply Teacher';
+  managerName = mnInp ? mnInp.value.trim() : '';
+  actIdx = 0;
+  loadAct(actIdx);
+  renderBrowseGrid();
+  go('s-activity');
+}
+
+// ══ NAVIGATION ══
+function go(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function confirmBack(){
+  if(confirm('Go back to the plan overview? The timer will pause.')) go('s-chain');
+}
+
+// ══ ACTIVITY ENGINE ══
+function loadAct(idx){
+  if(idx >= plan.length){ endDay(); return; }
+  const {act} = plan[idx];
+
+  document.getElementById('actEm').textContent    = act.em;
+  document.getElementById('actCat').textContent   = act.cat;
+  document.getElementById('actTitle').textContent = act.title;
+  document.getElementById('actMeta').textContent  = 'Zero prep · ' + act.mins + ' minutes';
+  document.getElementById('actNavTag').textContent = 'Activity ' + (idx+1) + ' of ' + plan.length;
+  document.getElementById('actProgTxt').textContent = (idx+1) + ' of ' + plan.length;
+  document.getElementById('actProg').style.width   = ((idx+1)/plan.length*100) + '%';
+  document.getElementById('actSteps').innerHTML = act.steps.map((s,i) =>
+    `<div class="step"><div class="stepn">${i+1}</div><div class="steptxt">${s}</div></div>`
+  ).join('');
+
+  startTimer(act.mins * 60);
+}
+
+function startTimer(secs){
+  clearInterval(timerInterval);
+  timerSecs = secs;
+  timerMax  = secs;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    if(timerSecs > 0){ timerSecs--; updateTimerDisplay(); }
+    else{ clearInterval(timerInterval); }
+  }, 1000);
+}
+
+function updateTimerDisplay(){
+  const m = Math.floor(timerSecs/60);
+  const s = timerSecs % 60;
+  const el = document.getElementById('actTimer');
+  if(el){
+    el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    el.style.color = timerSecs < 60 ? '#f87171' : timerSecs < 180 ? '#fbbf24' : '#0099ff';
+  }
+  const fill = document.getElementById('actTimerFill');
+  if(fill) fill.style.width = (timerSecs / timerMax * 100) + '%';
+}
+
+function markDoneNext(){
+  clearInterval(timerInterval);
+  document.getElementById('actTimer').style.color = '#0099ff';
+  plan[actIdx].status = 'done';
+  actIdx++;
+  if(actIdx >= plan.length){ endDay(); }
+  else { loadAct(actIdx); }
+}
+
+function skipAct(){
+  clearInterval(timerInterval);
+  plan[actIdx].status = 'skipped';
+  actIdx++;
+  if(actIdx >= plan.length){ endDay(); }
+  else { loadAct(actIdx); }
+}
+
+function endDay(){
+  clearInterval(timerInterval);
+  // Build report stats
+  const done    = plan.filter(p => p.status === 'done').length;
+  const skipped = plan.filter(p => p.status === 'skipped').length;
+  const added   = plan.filter(p => p.addedBy === 'supply').length;
+  const statsEl = document.getElementById('reportStats');
+  statsEl.innerHTML =
+    `<span class="rs-stat rs-done">✓ ${done} done</span>` +
+    (skipped ? `<span class="rs-stat rs-skip">↷ ${skipped} skipped</span>` : '') +
+    (added   ? `<span class="rs-stat rs-add">+ ${added} added</span>` : '');
+
+  const dest = teacherName ? 'Ms./Mr. ' + teacherName.split(' ').pop() : 'the classroom teacher';
+  document.getElementById('reportDestination').textContent =
+    'Send a quick report back to ' + dest + '. Takes 2 minutes.';
+  document.getElementById('reportToBox').innerHTML =
+    '<strong>Report goes to:</strong> ' + (teacherName||'classroom teacher') +
+    (teacherEmail ? ' (' + teacherEmail + ')' : '') +
+    (managerName  ? ' + ' + managerName + ' (manager)' : '');
+
+  go('s-report');
+}
+
+// ══ BROWSE ══
+function renderBrowseGrid(){
+  const el = document.getElementById('browseGrid');
+  if(!el) return;
+  el.innerHTML = ACTS.map(a => `
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;padding:14px;cursor:pointer;transition:all .2s"
+      onmouseover="this.style.transform='translateY(-2px)'"
+      onmouseout="this.style.transform=''">
+      <div style="font-size:28px;margin-bottom:6px">${a.em}</div>
+      <div style="font-size:10px;font-weight:800;color:#60a5fa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">${a.cat}</div>
+      <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:2px">${a.title}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:8px">${a.mins} min · Zero prep</div>
+      <button onclick="addActivity('${a.title}')" style="width:100%;padding:7px;
+        background:rgba(0,136,255,.15);border:1px solid rgba(0,136,255,.3);
+        border-radius:8px;color:#60a5fa;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">
+        + Add to today
+      </button>
+    </div>
+  `).join('');
+}
+
+function addActivity(title){
+  const act = ACTS.find(a => a.title === title);
+  if(!act) return;
+  plan.push({act, status:'pending', addedBy:'supply'});
+  showToast(act.em + ' ' + act.title + ' added to today');
+  go('s-activity');
+}
+
+// ══ MOOD + INCIDENTS ══
+function setMood(n){
+  moodScore = n;
+  document.querySelectorAll('#moodRow .mood-opt').forEach((el,i) => {
+    el.classList.toggle('sel', i === n-1);
+  });
+}
+
+function chipToggle(el){
+  const isNone = el.textContent === 'None';
+  if(isNone){
+    document.querySelectorAll('#incidentChips .chip').forEach(c => c.classList.remove('sel'));
+    el.classList.add('sel');
+  } else {
+    document.querySelector('#incidentChips .chip').classList.remove('sel');
+    el.classList.toggle('sel');
+  }
+}
+
+// ══ SUBMIT REPORT ══
+async function submitReport(){
+  const notes     = document.getElementById('reportNotes').value.trim();
+  const incidents = [...document.querySelectorAll('#incidentChips .chip.sel')]
+    .map(c => c.textContent).filter(t => t !== 'None');
+  const moodLabels = ['','Rough','Okay','Good','Great','Amazing'];
+  const moodEmojis = ['','😤','😐','🙂','😄','🌟'];
+  const done    = plan.filter(p => p.status === 'done');
+  const skipped = plan.filter(p => p.status === 'skipped');
+
+  const reportData = {
+    supplyName,
+    managerName,
+    teacherName,
+    teacherEmail,
+    date: new Date().toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}),
+    planAge,
+    mood: moodScore,
+    moodLabel: moodLabels[moodScore],
+    moodEmoji: moodEmojis[moodScore],
+    incidents: incidents.length ? incidents.join(', ') : 'None',
+    done: done.map(p => p.act.title),
+    skipped: skipped.map(p => p.act.title),
+    notes,
+  };
+
+  // Send to Make webhook
+  try{
+    await fetch('https://hook.us2.make.com/71zhbrmnl39bqead15tprpvqfc9vd6kw', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type: 'supply_report',
+        ...reportData,
+        source: 'adaptED supply.html',
+      })
+    });
+  } catch(e){ console.log('Webhook failed (non-critical):', e); }
+
+  // Build "View Report" deep link back into the app
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(reportData))));
+  const appLink = window.location.origin + '/app.html?report=' + encoded;
+
+  // Show confirmation
+  document.getElementById('sentMessage').textContent =
+    teacherName
+      ? teacherName + ' and' + (managerName ? ' ' + managerName : '') + ' both received your report.'
+      : 'Report sent successfully.';
+
+  document.getElementById('sentSummary').innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:8px">What was sent</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.8">
+      📅 ${reportData.date}<br>
+      ✓ ${done.length} activities completed<br>
+      ${skipped.length ? '↷ ' + skipped.length + ' skipped<br>' : ''}
+      ${moodEmojis[moodScore]} Class mood: ${moodLabels[moodScore]}<br>
+      ${incidents.length ? '⚠️ ' + incidents.join(', ') + '<br>' : ''}
+      ${notes ? '📝 Notes included<br>' : ''}
+      👤 From: ${supplyName}
+    </div>
+  `;
+
+  go('s-sent');
+}
+
+// ══ QUICK PLAN ══
+function qChip(el, group){
+  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function buildQuickAndStart(){
+  const ageEl  = document.querySelector('#qa-chips .sel');
+  const timeEl = document.querySelector('#qt-chips .sel');
+  planAge  = ageEl  ? ageEl.textContent.replace(/[🍼🧸📚🎒🎓]/g,'').trim() : '3–5';
+  planTime = timeEl ? timeEl.textContent.trim() : '2 hours';
+  supplyName = (document.getElementById('quickName')||{}).value || 'Supply Teacher';
+  const n = {'30 min':2,'1 hour':3,'2 hours':5,'Half day':7}[planTime] || 5;
+  const shuffled = [...ACTS].sort(() => Math.random() - .5).slice(0,n);
+  shuffled[0] = ACTS[0];
+  if(n>2) shuffled[shuffled.length-1] = ACTS[5];
+  plan = shuffled.map(a => ({act:a, status:'pending', addedBy:'plan'}));
+  actIdx = 0;
+  loadAct(actIdx);
+  renderBrowseGrid();
+  go('s-activity');
+}
+
+// ══ UTILS ══
+function showToast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style,{
+    position:'fixed',bottom:'90px',left:'50%',transform:'translateX(-50%)',
+    background:'rgba(10,12,25,.95)',border:'1px solid rgba(255,255,255,.12)',
+    borderRadius:'100px',padding:'10px 18px',fontSize:'12px',fontWeight:'700',
+    color:'#fff',zIndex:'9999',whiteSpace:'nowrap',
+    boxShadow:'0 8px 24px -8px rgba(0,0,0,.5)',
+    animation:'fadeIn .25s ease',
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+</script>
+</body>
+</html>

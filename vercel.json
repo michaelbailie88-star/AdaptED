@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "functions": {
+    "api/verify.js": { "maxDuration": 10 }
+  },
+  "routes": [
+    { "src": "/app", "dest": "/app.html" },
+    { "src": "/app/(.*)", "dest": "/app.html" }
+  ]
+}

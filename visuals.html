@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Communication Boards — The Lazy Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f4ff;
+  --paper:#fff;
+  --ink:#1a1f36;
+  --ink-2:#4a5270;
+  --line:#dde3f5;
+  --yellow:#f5c800;   /* people / pronouns */
+  --yellow-dk:#a07c00;
+  --blue:#3b82f6;     /* actions / verbs */
+  --blue-dk:#1d4ed8;
+  --green:#22c55e;    /* location / movement */
+  --green-dk:#15803d;
+  --pink:#ec4899;     /* descriptors / concepts */
+  --pink-dk:#9d174d;
+  --orange:#f97316;   /* feelings */
+  --orange-dk:#c2410c;
+  --purple:#8b5cf6;   /* schedule */
+  --purple-dk:#6d28d9;
+  --teal:#06b6d4;     /* questions */
+  --teal-dk:#0e7490;
+  --rad:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:'Nunito Sans',sans-serif;background:var(--bg);color:var(--ink)}
+body{display:flex;flex-direction:column;max-width:900px;margin:0 auto;padding:0}
+
+/* Header */
+.app-hdr{
+  background:var(--paper);
+  border-bottom:2px solid var(--line);
+  padding:14px 16px 0;
+  position:sticky;top:0;z-index:50;
+}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hdr-brand{font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.02em}
+.hdr-brand span{color:var(--blue)}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,0.6);font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.print-btn{background:var(--ink);color:#fff;border:none;border-radius:100px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px}
+.print-btn:hover{background:#2d3561}
+
+/* Tab bar */
+.tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:10px 16px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:var(--ink-2);cursor:pointer;border-bottom:3px solid transparent;transition:color 0.18s,border-color 0.18s;white-space:nowrap}
+.tab.active{color:var(--blue);border-color:var(--blue)}
+
+/* Main content */
+.content{flex:1;overflow-y:auto;padding:16px}
+.board{display:none}
+.board.active{display:block}
+
+/* Board header */
+.board-hdr{margin-bottom:14px}
+.board-title{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:3px}
+.board-desc{font-size:13px;color:rgba(255,255,255,0.7);line-height:1.4}
+.board-hint{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--blue);letter-spacing:0.06em;text-transform:uppercase;margin-top:6px}
+
+/* Category label */
+.cat-label{font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5)!important;color:rgba(255,255,255,0.55)!important;color:var(--ink-2);margin:12px 0 6px;padding-left:2px}
+
+/* Symbol grid */
+.sym-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-bottom:4px}
+.sym-card{
+  background:var(--c,#e0e7ff);
+  border-radius:var(--rad);
+  padding:10px 4px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;
+  transition:transform 0.12s,box-shadow 0.12s,opacity 0.12s;
+  border:2px solid transparent;
+  user-select:none;
+  -webkit-user-select:none;
+  min-height:82px;
+  justify-content:center;
+}
+.sym-card:active,.sym-card.speaking{
+  transform:scale(0.94);
+  box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--cb,#3b82f6);
+  opacity:0.9;
+}
+.sym-card.lit{
+  transform:scale(1.06);
+  box-shadow:0 6px 20px -6px rgba(0,0,0,0.3),0 0 0 3px #fff,0 0 0 5px var(--cb,#3b82f6);
+  z-index:2;
+  position:relative;
+}
+.sym-em{font-size:28px;line-height:1;pointer-events:none}
+.sym-label{font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;color:var(--cb,#1a1a1a);text-align:center;line-height:1.2;pointer-events:none;word-break:break-word}
+
+/* Color themes */
+.c-yellow{--c:#fef08a;--cb:var(--yellow-dk)}
+.c-blue{--c:#bfdbfe;--cb:var(--blue-dk)}
+.c-green{--c:#bbf7d0;--cb:var(--green-dk)}
+.c-pink{--c:#fbcfe8;--cb:var(--pink-dk)}
+.c-orange{--c:#fed7aa;--cb:var(--orange-dk)}
+.c-purple{--c:#ddd6fe;--cb:var(--purple-dk)}
+.c-teal{--c:#a5f3fc;--cb:var(--teal-dk)}
+.c-red{--c:#fecaca;--cb:#991b1b}
+.c-gray{--c:#e5e7eb;--cb:#374151}
+
+/* Feelings board special */
+.feelings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
+.feelings-grid .sym-card{min-height:96px;padding:12px 6px 10px}
+.feelings-grid .sym-em{font-size:36px}
+.feelings-grid .sym-label{font-size:12px}
+
+/* Schedule board */
+.schedule-grid{display:flex;flex-direction:column;gap:8px}
+.sched-item{
+  background:var(--c,#e0e7ff);
+  border-radius:var(--rad);
+  padding:12px 16px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;
+  transition:transform 0.12s,box-shadow 0.12s;
+  border:2px solid transparent;
+}
+.sched-item:active,.sched-item.lit{
+  transform:scale(0.98);
+  box-shadow:0 0 0 3px #fff,0 0 0 5px var(--cb,#8b5cf6);
+}
+.sched-item.lit{transform:scale(1.01)}
+.sched-step{font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;color:var(--purple-dk);min-width:24px;text-align:center}
+.sched-em{font-size:28px;flex-shrink:0}
+.sched-text{font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;color:#fff}
+.sched-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px}
+
+/* Speech indicator */
+.speech-bar{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#fff;
+  padding:12px 24px;border-radius:100px;
+  font-family:'Nunito',sans-serif;font-size:16px;font-weight:900;
+  pointer-events:none;
+  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:100;
+  box-shadow:0 8px 24px -8px rgba(0,0,0,0.5);
+  display:flex;align-items:center;gap:8px;
+  white-space:nowrap;
+  max-width:90vw;
+}
+.speech-bar.visible{transform:translateX(-50%) translateY(0)}
+.speech-wave{display:flex;gap:3px;align-items:center;height:16px}
+.speech-wave span{display:block;width:3px;background:#fff;border-radius:3px;animation:wave 0.8s ease-in-out infinite}
+.speech-wave span:nth-child(2){animation-delay:0.15s}
+.speech-wave span:nth-child(3){animation-delay:0.3s}
+@keyframes wave{0%,100%{height:4px}50%{height:14px}}
+
+/* Color legend */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.65)}
+.legend-dot{width:12px;height:12px;border-radius:50%}
+
+/* ═══ PRINT STYLES ═══ */
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .app-hdr,.print-btn,.speech-bar,.board-hint{display:none!important}
+  .content{padding:8px}
+  .board{display:block!important;page-break-after:always}
+  .board:last-child{page-break-after:auto}
+  .board-title{font-size:18px;margin-bottom:4px}
+  .board-desc{font-size:11px}
+  .sym-card{min-height:70px;padding:8px 4px 6px}
+  .sym-em{font-size:22px}
+  .sym-label{font-size:10px}
+  .sched-item{padding:8px 12px}
+  .sched-text{font-size:13px}
+}
+
+/* ═══════════════════════════════════════════════════
+   ⚡ NEON — Communication Boards · AdaptED Blue
+═══════════════════════════════════════════════════ */
+:root{
+  --nb:#0099ff;   /* neon blue primary */
+  --nb2:#00ccff;  /* neon blue bright */
+  --nb3:#0055ff;  /* neon blue deep */
+  --nt:#00ffcc;   /* neon teal accent */
+  --bg:#04080f;
+  --paper:rgba(255,255,255,0.04);
+  --ink:#ffffff;
+  --ink-2:rgba(255,255,255,0.75);
+  --line:rgba(0,153,255,0.12);
+}
+
+html,body{background:#04080f!important;color:#fff!important}
+
+/* Deep blue nebula ambient */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 10% 15%,rgba(0,100,255,0.1) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 70% at 90% 80%,rgba(0,200,255,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 40% at 50% 45%,rgba(0,80,200,0.05) 0%,transparent 65%);
+  animation:blueAmbient 12s ease-in-out infinite alternate;
+}
+@keyframes blueAmbient{0%{opacity:0.7}100%{opacity:1}}
+
+/* ── KEYFRAMES ── */
+@keyframes floatSym{0%,100%{transform:translateY(0px)}50%{transform:translateY(-7px)}}
+@keyframes floatCard{0%,100%{transform:translateY(0px)}50%{transform:translateY(-5px)}}
+@keyframes bluePulse{
+  0%,100%{box-shadow:0 0 8px var(--nb),0 0 20px rgba(0,153,255,0.4);border-color:rgba(0,153,255,0.6)}
+  50%{box-shadow:0 0 14px var(--nb2),0 0 36px rgba(0,204,255,0.5);border-color:rgba(0,204,255,0.8)}
+}
+@keyframes blueGlow{
+  0%,100%{box-shadow:0 0 6px rgba(0,153,255,0.3)}
+  50%{box-shadow:0 0 14px rgba(0,204,255,0.6),0 0 28px rgba(0,153,255,0.2)}
+}
+@keyframes textBlueGlow{
+  0%,100%{text-shadow:none,0 0 18px rgba(0,153,255,0.5)}
+  50%{text-shadow:0 0 14px var(--nb2),0 0 32px rgba(0,204,255,0.7),0 0 55px rgba(0,153,255,0.3)}
+}
+@keyframes borderBlueCycle{
+  0%,100%{border-color:rgba(0,153,255,0.18)}
+  50%{border-color:rgba(0,204,255,0.28)}
+}
+@keyframes tabGlow{
+  0%,100%{box-shadow:0 0 0 rgba(0,153,255,0)}
+  50%{box-shadow:0 2px 12px rgba(0,153,255,0.4)}
+}
+
+/* ── HEADER ── */
+.app-hdr{background:rgba(4,8,15,0.95)!important;border-bottom:1px solid rgba(0,153,255,0.15)!important;backdrop-filter:blur(16px)!important}
+.hdr-brand{color:#fff!important}
+.hdr-brand span{color:var(--nb)!important;text-shadow:none!important}
+.hdr-sub{color:rgba(255,255,255,0.5)!important}
+.print-btn{
+  background:rgba(0,153,255,0.1)!important;
+  border:1.5px solid rgba(0,153,255,0.6)!important;
+  color:var(--nb)!important;text-shadow:none!important;
+  animation:bluePulse 3s ease infinite!important;
+  transition:all 0.2s!important;
+}
+.print-btn:hover{background:rgba(0,153,255,0.2)!important;filter:brightness(1.25)!important;transform:translateY(-2px)!important}
+
+/* ── TABS ── */
+.tabs{background:rgba(0,0,0,0.3)!important;border-bottom:1px solid rgba(0,153,255,0.1)!important}
+.tab-btn{color:rgba(255,255,255,0.5)!important;border-bottom:2px solid transparent!important;transition:all 0.2s!important}
+.tab-btn:hover{color:rgba(0,204,255,0.8)!important;text-shadow:0 0 8px rgba(0,153,255,0.6)!important}
+.tab-btn.active{color:var(--nb)!important;border-bottom-color:var(--nb)!important;text-shadow:none!important;animation:tabGlow 2.5s ease infinite!important}
+
+/* ── SYMBOL CELLS ── */
+.sym-cell{
+  background:rgba(255,255,255,0.03)!important;
+  border:1px solid rgba(0,153,255,0.1)!important;
+  animation:floatSym 5s ease-in-out infinite,borderBlueCycle 6s ease infinite!important;
+  transition:all 0.2s!important;
+}
+.sym-cell:nth-child(2n){animation-delay:0.4s,1s!important}
+.sym-cell:nth-child(3n){animation-delay:0.8s,2s!important}
+.sym-cell:nth-child(4n){animation-delay:1.2s,3s!important}
+.sym-cell:nth-child(5n){animation-delay:1.6s,4s!important}
+.sym-cell:nth-child(6n){animation-delay:2s,5s!important}
+.sym-cell:hover{
+  background:rgba(0,153,255,0.1)!important;
+  border-color:rgba(0,153,255,0.5)!important;
+  box-shadow:0 0 18px rgba(0,153,255,0.25),0 6px 20px rgba(0,0,0,0.4)!important;
+  transform:scale(1.06) translateY(-4px)!important;
+}
+.sym-cell.selected,.sym-cell.active{
+  background:rgba(0,153,255,0.15)!important;
+  border-color:var(--nb)!important;
+  box-shadow:0 0 14px rgba(0,153,255,0.5),0 0 30px rgba(0,153,255,0.2)!important;
+}
+/* sym-label uses --cb (dark variant) for contrast on pastel cards */
+
+/* ── SCHEDULE ITEMS ── */
+.sched-item{
+  background:rgba(255,255,255,0.03)!important;
+  border:1px solid rgba(0,153,255,0.1)!important;
+  animation:floatCard 6s ease-in-out infinite,borderBlueCycle 7s ease infinite!important;
+}
+.sched-item:nth-child(2n){animation-delay:0.5s,1.5s!important}
+.sched-item:nth-child(3n){animation-delay:1s,3s!important}
+.sched-item:hover{border-color:rgba(0,153,255,0.4)!important;box-shadow:0 0 12px rgba(0,153,255,0.2)!important}
+.sched-text{color:#fff!important}
+
+/* ── SENTENCE BAR ── */
+#sentenceBar,[class*='sentence']{
+  background:rgba(4,8,15,0.95)!important;
+  border-bottom:1px solid rgba(0,153,255,0.12)!important;
+  backdrop-filter:blur(12px)!important;
+}
+.sent-chip{
+  background:rgba(0,153,255,0.12)!important;
+  border:1px solid rgba(0,153,255,0.35)!important;
+  color:#fff!important;
+  animation:borderBlueCycle 4s ease infinite!important;
+}
+.sent-chip:hover{background:rgba(0,153,255,0.22)!important;box-shadow:0 0 10px rgba(0,153,255,0.3)!important}
+.sent-btn,.speak-btn,[class*='speak']{
+  animation:bluePulse 2.5s ease infinite!important;
+}
+.sent-btn.speak{background:rgba(0,153,255,0.2)!important;border:1.5px solid var(--nb)!important;color:var(--nb)!important;text-shadow:none!important;box-shadow:0 0 12px rgba(0,153,255,0.35)!important}
+.sent-btn.clear{background:rgba(255,255,255,0.05)!important;border:1px solid rgba(255,255,255,0.12)!important;color:rgba(255,255,255,0.6)!important}
+
+/* ── LIGHT BACKGROUND KILLER ── */
+[style*="background:#f0f4ff"],[style*="background:#fff"],[style*="background:white"],[style*="background:var(--bg)"],[style*="background:var(--paper)"]{background:rgba(255,255,255,0.03)!important}
+[style*="color:#1a1f36"],[style*="color:var(--ink)"]{color:#fff!important}
+[style*="color:#4a5270"],[style*="color:var(--ink-2)"]{color:rgba(255,255,255,0.7)!important}
+[style*="border:1px solid"],[style*="border-color:#dde3f5"]{border-color:rgba(0,153,255,0.1)!important}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;background:#04080f}
+::-webkit-scrollbar-thumb{background:var(--nb);border-radius:2px;box-shadow:0 0 4px var(--nb)}
+/* ── FINAL READABILITY CATCH-ALL ──
+   Catches any inline styles or remaining hardcoded light colors
+   that escaped the targeted fixes above.
+── */
+[style*="color:#0"],[style*="color:#1"],[style*="color:#2"],
+[style*="color:#3"],[style*="color:#4"],[style*="color:#5"],
+[style*="color:#6"],[style*="color:#7"],[style*="color:#8"],
+[style*="color:#9a"],[style*="color:#9b"],[style*="color:#9c"],
+[style*="color:#9d"],[style*="color:#9e"],[style*="color:#9f"]{
+  color:rgba(255,255,255,0.85)!important;
+}
+/* Override light inline backgrounds */
+[style*="background:#f"]:not([style*="background:#f97"]):not([style*="background:#fb"]):not([style*="background:#fe"]),
+[style*="background:#e"]:not([style*="background:#ef"]):not([style*="background:#ea"]),
+[style*="background:#d"]:not([style*="background:#dc"]),
+[style*="background:#c"]:not([style*="background:#c084"]):not([style*="background:#c2"]):not([style*="background:#cc"]){
+  background:rgba(255,255,255,0.05)!important;
+}
+/* Force all card/section text children to be readable */
+.card *:not(button):not(.tag):not(.heart):not(.card-cat),
+.res-card *:not(button):not(.res-btn):not(.res-pages),
+.mat-card *:not(button),
+.about-card *:not(button):not(.about-contact-btn),
+.plan-card *:not(button),
+.review-card *:not(button){
+  color:inherit;
+}
+
+</style>
+</head>
+<body>
+
+<header class="app-hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-brand">Communication <span>Boards</span></div>
+      <div class="hdr-sub">by The Lazy Creator</div>
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print All</button>
+  </div>
+  <div class="tabs" id="tabBar">
+    <div class="tab active" onclick="showBoard('playground',this)">🛝 Playground</div>
+    <div class="tab" onclick="showBoard('classroom',this)">📚 Classroom</div>
+    <div class="tab" onclick="showBoard('feelings',this)">💛 Feelings</div>
+    <div class="tab" onclick="showBoard('schedule',this)">📅 Schedule</div>
+  </div>
+</header>
+
+<div class="content">
+
+  <!-- ══ PLAYGROUND BOARD ══ -->
+  <div class="board active" id="board-playground">
+    <div class="board-hdr">
+      <h1 class="board-title">🛝 Playground Communication Board</h1>
+      <p class="board-desc">Core vocabulary for outdoor play. Laminate and post outdoors or use as a portable communication support.</p>
+      <div class="board-hint">👆 Tap any symbol to hear it</div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>People</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Actions</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Location</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>Concepts</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>Feelings</div>
+    </div>
+
+    <div class="cat-label">People</div>
+    <div class="sym-grid">
+      <div class="sym-card c-yellow" onclick="say(this,'I')"><span class="sym-em">🙋</span><span class="sym-label">I</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'you')"><span class="sym-em">👉</span><span class="sym-label">you</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'we')"><span class="sym-em">🤝</span><span class="sym-label">we</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'my friend')"><span class="sym-em">👫</span><span class="sym-label">my friend</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'adult')"><span class="sym-em">🧑</span><span class="sym-label">adult</span></div>
+    </div>
+
+    <div class="cat-label">I want to…</div>
+    <div class="sym-grid">
+      <div class="sym-card c-blue" onclick="say(this,'want')"><span class="sym-em">🙌</span><span class="sym-label">want</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'play')"><span class="sym-em">⚽</span><span class="sym-label">play</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'run')"><span class="sym-em">🏃</span><span class="sym-label">run</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'swing')"><span class="sym-em">🎠</span><span class="sym-label">swing</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'slide')"><span class="sym-em">🛝</span><span class="sym-label">slide</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'climb')"><span class="sym-em">🧗</span><span class="sym-label">climb</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'jump')"><span class="sym-em">🦘</span><span class="sym-label">jump</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'throw')"><span class="sym-em">🤾</span><span class="sym-label">throw</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'catch')"><span class="sym-em">🫳</span><span class="sym-label">catch</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'chase')"><span class="sym-em">🏇</span><span class="sym-label">chase</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'dig')"><span class="sym-em">⛏️</span><span class="sym-label">dig</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'help')"><span class="sym-em">🤲</span><span class="sym-label">help</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'stop')"><span class="sym-em">✋</span><span class="sym-label">stop</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'go')"><span class="sym-em">🟢</span><span class="sym-label">go</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'come')"><span class="sym-em">👋</span><span class="sym-label">come</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'watch me')"><span class="sym-em">👀</span><span class="sym-label">watch me</span></div>
+    </div>
+
+    <div class="cat-label">Taking Turns</div>
+    <div class="sym-grid">
+      <div class="sym-card c-teal" onclick="say(this,'my turn')"><span class="sym-em">☝️</span><span class="sym-label">my turn</span></div>
+      <div class="sym-card c-teal" onclick="say(this,'your turn')"><span class="sym-em">👇</span><span class="sym-label">your turn</span></div>
+      <div class="sym-card c-teal" onclick="say(this,'together')"><span class="sym-em">🫂</span><span class="sym-label">together</span></div>
+      <div class="sym-card c-teal" onclick="say(this,'wait')"><span class="sym-em">⏳</span><span class="sym-label">wait</span></div>
+      <div class="sym-card c-teal" onclick="say(this,'again')"><span class="sym-em">🔁</span><span class="sym-label">again</span></div>
+    </div>
+
+    <div class="cat-label">Location</div>
+    <div class="sym-grid">
+      <div class="sym-card c-green" onclick="say(this,'up')"><span class="sym-em">⬆️</span><span class="sym-label">up</span></div>
+      <div class="sym-card c-green" onclick="say(this,'down')"><span class="sym-em">⬇️</span><span class="sym-label">down</span></div>
+      <div class="sym-card c-green" onclick="say(this,'here')"><span class="sym-em">📍</span><span class="sym-label">here</span></div>
+      <div class="sym-card c-green" onclick="say(this,'there')"><span class="sym-em">👉</span><span class="sym-label">there</span></div>
+      <div class="sym-card c-green" onclick="say(this,'in')"><span class="sym-em">📥</span><span class="sym-label">in</span></div>
+      <div class="sym-card c-green" onclick="say(this,'out')"><span class="sym-em">📤</span><span class="sym-label">out</span></div>
+      <div class="sym-card c-green" onclick="say(this,'fast')"><span class="sym-em">💨</span><span class="sym-label">fast</span></div>
+      <div class="sym-card c-green" onclick="say(this,'slow')"><span class="sym-em">🐢</span><span class="sym-label">slow</span></div>
+    </div>
+
+    <div class="cat-label">Concepts</div>
+    <div class="sym-grid">
+      <div class="sym-card c-pink" onclick="say(this,'more')"><span class="sym-em">➕</span><span class="sym-label">more</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'all done')"><span class="sym-em">✅</span><span class="sym-label">all done</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'good')"><span class="sym-em">👍</span><span class="sym-label">good</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'no')"><span class="sym-em">❌</span><span class="sym-label">no</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'yes')"><span class="sym-em">✔️</span><span class="sym-label">yes</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'big')"><span class="sym-em">🐘</span><span class="sym-label">big</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'little')"><span class="sym-em">🐭</span><span class="sym-label">little</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'same')"><span class="sym-em">🟰</span><span class="sym-label">same</span></div>
+    </div>
+
+    <div class="cat-label">How I Feel</div>
+    <div class="sym-grid">
+      <div class="sym-card c-orange" onclick="say(this,'happy')"><span class="sym-em">😊</span><span class="sym-label">happy</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'sad')"><span class="sym-em">😢</span><span class="sym-label">sad</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'mad')"><span class="sym-em">😠</span><span class="sym-label">mad</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'scared')"><span class="sym-em">😨</span><span class="sym-label">scared</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'tired')"><span class="sym-em">😴</span><span class="sym-label">tired</span></div>
+      <div class="sym-card c-red" onclick="say(this,'hurt')"><span class="sym-em">🩹</span><span class="sym-label">hurt</span></div>
+    </div>
+  </div>
+
+  <!-- ══ CLASSROOM BOARD ══ -->
+  <div class="board" id="board-classroom">
+    <div class="board-hdr">
+      <h1 class="board-title">📚 Classroom Communication Board</h1>
+      <p class="board-desc">Daily routine vocabulary for childcare and classroom settings. Ages 1.5–5.</p>
+      <div class="board-hint">👆 Tap any symbol to hear it</div>
+    </div>
+
+    <div class="cat-label">People</div>
+    <div class="sym-grid">
+      <div class="sym-card c-yellow" onclick="say(this,'I')"><span class="sym-em">🙋</span><span class="sym-label">I</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'you')"><span class="sym-em">👉</span><span class="sym-label">you</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'we')"><span class="sym-em">🤝</span><span class="sym-label">we</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'teacher')"><span class="sym-em">👩‍🏫</span><span class="sym-label">teacher</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'friend')"><span class="sym-em">🧑</span><span class="sym-label">friend</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'mom')"><span class="sym-em">👩</span><span class="sym-label">mom</span></div>
+      <div class="sym-card c-yellow" onclick="say(this,'dad')"><span class="sym-em">👨</span><span class="sym-label">dad</span></div>
+    </div>
+
+    <div class="cat-label">I need…</div>
+    <div class="sym-grid">
+      <div class="sym-card c-blue" onclick="say(this,'help')"><span class="sym-em">🤲</span><span class="sym-label">help</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'bathroom')"><span class="sym-em">🚽</span><span class="sym-label">bathroom</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'water')"><span class="sym-em">💧</span><span class="sym-label">water</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'break')"><span class="sym-em">⏸️</span><span class="sym-label">break</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'snack')"><span class="sym-em">🍎</span><span class="sym-label">snack</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'hug')"><span class="sym-em">🫂</span><span class="sym-label">hug</span></div>
+    </div>
+
+    <div class="cat-label">Actions</div>
+    <div class="sym-grid">
+      <div class="sym-card c-blue" onclick="say(this,'sit')"><span class="sym-em">🪑</span><span class="sym-label">sit</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'stand')"><span class="sym-em">🧍</span><span class="sym-label">stand</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'listen')"><span class="sym-em">👂</span><span class="sym-label">listen</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'look')"><span class="sym-em">👀</span><span class="sym-label">look</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'read')"><span class="sym-em">📖</span><span class="sym-label">read</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'draw')"><span class="sym-em">✏️</span><span class="sym-label">draw</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'sing')"><span class="sym-em">🎵</span><span class="sym-label">sing</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'eat')"><span class="sym-em">🍽️</span><span class="sym-label">eat</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'sleep')"><span class="sym-em">😴</span><span class="sym-label">sleep</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'clean up')"><span class="sym-em">🧹</span><span class="sym-label">clean up</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'wash hands')"><span class="sym-em">🤲</span><span class="sym-label">wash hands</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'line up')"><span class="sym-em">➡️</span><span class="sym-label">line up</span></div>
+    </div>
+
+    <div class="cat-label">Places</div>
+    <div class="sym-grid">
+      <div class="sym-card c-green" onclick="say(this,'table')"><span class="sym-em">🪑</span><span class="sym-label">table</span></div>
+      <div class="sym-card c-green" onclick="say(this,'floor')"><span class="sym-em">⬇️</span><span class="sym-label">floor</span></div>
+      <div class="sym-card c-green" onclick="say(this,'outside')"><span class="sym-em">🌳</span><span class="sym-label">outside</span></div>
+      <div class="sym-card c-green" onclick="say(this,'carpet')"><span class="sym-em">🟫</span><span class="sym-label">carpet</span></div>
+      <div class="sym-card c-green" onclick="say(this,'door')"><span class="sym-em">🚪</span><span class="sym-label">door</span></div>
+      <div class="sym-card c-green" onclick="say(this,'cubby')"><span class="sym-em">📦</span><span class="sym-label">cubby</span></div>
+    </div>
+
+    <div class="cat-label">Concepts</div>
+    <div class="sym-grid">
+      <div class="sym-card c-pink" onclick="say(this,'yes')"><span class="sym-em">✔️</span><span class="sym-label">yes</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'no')"><span class="sym-em">❌</span><span class="sym-label">no</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'more')"><span class="sym-em">➕</span><span class="sym-label">more</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'all done')"><span class="sym-em">✅</span><span class="sym-label">all done</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'my turn')"><span class="sym-em">☝️</span><span class="sym-label">my turn</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'wait')"><span class="sym-em">⏳</span><span class="sym-label">wait</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'quiet')"><span class="sym-em">🤫</span><span class="sym-label">quiet</span></div>
+      <div class="sym-card c-pink" onclick="say(this,'loud')"><span class="sym-em">📢</span><span class="sym-label">loud</span></div>
+    </div>
+  </div>
+
+  <!-- ══ FEELINGS BOARD ══ -->
+  <div class="board" id="board-feelings">
+    <div class="board-hdr">
+      <h1 class="board-title">💛 Feelings & Emotions</h1>
+      <p class="board-desc">Visual emotion check-in chart. Use for morning meetings, transitions, or whenever a child needs to name how they feel.</p>
+      <div class="board-hint">👆 Tap any feeling to hear it</div>
+    </div>
+
+    <div class="cat-label">How are you feeling right now?</div>
+    <div class="feelings-grid">
+      <div class="sym-card c-orange" onclick="say(this,'happy')"><span class="sym-em">😊</span><span class="sym-label">happy</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'excited')"><span class="sym-em">🤩</span><span class="sym-label">excited</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'proud')"><span class="sym-em">🦁</span><span class="sym-label">proud</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'loved')"><span class="sym-em">🥰</span><span class="sym-label">loved</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'calm')"><span class="sym-em">😌</span><span class="sym-label">calm</span></div>
+      <div class="sym-card c-orange" onclick="say(this,'silly')"><span class="sym-em">🤪</span><span class="sym-label">silly</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'sad')"><span class="sym-em">😢</span><span class="sym-label">sad</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'tired')"><span class="sym-em">😴</span><span class="sym-label">tired</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'bored')"><span class="sym-em">😐</span><span class="sym-label">bored</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'lonely')"><span class="sym-em">🥺</span><span class="sym-label">lonely</span></div>
+      <div class="sym-card c-blue" onclick="say(this,'disappointed')"><span class="sym-em">😞</span><span class="sym-label">disappointed</span></div>
+      <div class="sym-card c-red" onclick="say(this,'angry')"><span class="sym-em">😠</span><span class="sym-label">angry</span></div>
+      <div class="sym-card c-red" onclick="say(this,'frustrated')"><span class="sym-em">😤</span><span class="sym-label">frustrated</span></div>
+      <div class="sym-card c-red" onclick="say(this,'mad')"><span class="sym-em">😡</span><span class="sym-label">mad</span></div>
+      <div class="sym-card c-purple" onclick="say(this,'scared')"><span class="sym-em">😨</span><span class="sym-label">scared</span></div>
+      <div class="sym-card c-purple" onclick="say(this,'worried')"><span class="sym-em">😟</span><span class="sym-label">worried</span></div>
+      <div class="sym-card c-purple" onclick="say(this,'surprised')"><span class="sym-em">😲</span><span class="sym-label">surprised</span></div>
+      <div class="sym-card c-purple" onclick="say(this,'confused')"><span class="sym-em">🤔</span><span class="sym-label">confused</span></div>
+      <div class="sym-card c-gray" onclick="say(this,'sick')"><span class="sym-em">🤒</span><span class="sym-label">sick</span></div>
+      <div class="sym-card c-gray" onclick="say(this,'hurt')"><span class="sym-em">🩹</span><span class="sym-label">hurt</span></div>
+    </div>
+
+    <div class="cat-label" style="margin-top:20px">My body feels…</div>
+    <div class="sym-grid">
+      <div class="sym-card c-green" onclick="say(this,'my tummy hurts')"><span class="sym-em">🤢</span><span class="sym-label">tummy hurts</span></div>
+      <div class="sym-card c-green" onclick="say(this,'my head hurts')"><span class="sym-em">🤕</span><span class="sym-label">head hurts</span></div>
+      <div class="sym-card c-green" onclick="say(this,'I am hot')"><span class="sym-em">🥵</span><span class="sym-label">hot</span></div>
+      <div class="sym-card c-green" onclick="say(this,'I am cold')"><span class="sym-em">🥶</span><span class="sym-label">cold</span></div>
+      <div class="sym-card c-green" onclick="say(this,'I am hungry')"><span class="sym-em">🍽️</span><span class="sym-label">hungry</span></div>
+      <div class="sym-card c-green" onclick="say(this,'I am thirsty')"><span class="sym-em">💧</span><span class="sym-label">thirsty</span></div>
+    </div>
+  </div>
+
+  <!-- ══ DAILY SCHEDULE ══ -->
+  <div class="board" id="board-schedule">
+    <div class="board-hdr">
+      <h1 class="board-title">📅 Daily Visual Schedule</h1>
+      <p class="board-desc">Morning routine and childcare day schedule. Tap each step to hear it. Print and display at child eye level.</p>
+      <div class="board-hint">👆 Tap any step to hear it</div>
+    </div>
+
+    <div class="cat-label">Morning at Home</div>
+    <div class="schedule-grid" id="morning-sched">
+      <div class="sched-item c-purple" onclick="saySchedule(this,'wake up', 'Time to wake up!')"><span class="sched-step">1</span><span class="sched-em">🌅</span><div><div class="sched-text">Wake Up</div><div class="sched-sub">Good morning!</div></div></div>
+      <div class="sched-item c-purple" onclick="saySchedule(this,'use the bathroom', '')"><span class="sched-step">2</span><span class="sched-em">🚽</span><div><div class="sched-text">Bathroom</div><div class="sched-sub">Wash hands after</div></div></div>
+      <div class="sched-item c-purple" onclick="saySchedule(this,'get dressed', '')"><span class="sched-step">3</span><span class="sched-em">👕</span><div><div class="sched-text">Get Dressed</div><div class="sched-sub">Pick your clothes</div></div></div>
+      <div class="sched-item c-purple" onclick="saySchedule(this,'eat breakfast', '')"><span class="sched-step">4</span><span class="sched-em">🥣</span><div><div class="sched-text">Eat Breakfast</div><div class="sched-sub">Sit at the table</div></div></div>
+      <div class="sched-item c-purple" onclick="saySchedule(this,'brush teeth', '')"><span class="sched-step">5</span><span class="sched-em">🦷</span><div><div class="sched-text">Brush Teeth</div><div class="sched-sub">2 minutes</div></div></div>
+      <div class="sched-item c-purple" onclick="saySchedule(this,'get your bag', '')"><span class="sched-step">6</span><span class="sched-em">🎒</span><div><div class="sched-text">Get Your Bag</div><div class="sched-sub">Check your cubby</div></div></div>
+      <div class="sched-item c-purple" onclick="saySchedule(this,'go to school', 'Time to go! Have a great day!')"><span class="sched-step">7</span><span class="sched-em">🏫</span><div><div class="sched-text">Go to School</div><div class="sched-sub">See you later!</div></div></div>
+    </div>
+
+    <div class="cat-label" style="margin-top:16px">Childcare / School Day</div>
+    <div class="schedule-grid">
+      <div class="sched-item c-teal" onclick="saySchedule(this,'arrival time', 'Welcome! Hang up your bag.')"><span class="sched-step">1</span><span class="sched-em">🌟</span><div><div class="sched-text">Arrival</div><div class="sched-sub">Hang up your bag</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'morning meeting', '')"><span class="sched-step">2</span><span class="sched-em">⭕</span><div><div class="sched-text">Morning Meeting</div><div class="sched-sub">Circle time</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'activity time', '')"><span class="sched-step">3</span><span class="sched-em">🎨</span><div><div class="sched-text">Activity Time</div><div class="sched-sub">Play and create</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'snack time', '')"><span class="sched-step">4</span><span class="sched-em">🍎</span><div><div class="sched-text">Snack Time</div><div class="sched-sub">Wash hands first</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'outside time', '')"><span class="sched-step">5</span><span class="sched-em">🌳</span><div><div class="sched-text">Outside</div><div class="sched-sub">Playground or yard</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'lunch time', '')"><span class="sched-step">6</span><span class="sched-em">🥗</span><div><div class="sched-text">Lunch</div><div class="sched-sub">Sit with friends</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'rest time', '')"><span class="sched-step">7</span><span class="sched-em">😴</span><div><div class="sched-text">Rest Time</div><div class="sched-sub">Quiet bodies</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'afternoon activity', '')"><span class="sched-step">8</span><span class="sched-em">🧩</span><div><div class="sched-text">Afternoon Activity</div><div class="sched-sub">Books or games</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'clean up time', 'Time to clean up!')"><span class="sched-step">9</span><span class="sched-em">🧹</span><div><div class="sched-text">Clean Up</div><div class="sched-sub">Everyone helps</div></div></div>
+      <div class="sched-item c-teal" onclick="saySchedule(this,'home time', 'Great day! See you tomorrow!')"><span class="sched-step">10</span><span class="sched-em">🏠</span><div><div class="sched-text">Home Time</div><div class="sched-sub">See you tomorrow!</div></div></div>
+    </div>
+  </div>
+
+</div><!-- end .content -->
+
+<!-- Speech indicator -->
+<div class="speech-bar" id="speechBar">
+  <div class="speech-wave"><span></span><span></span><span></span></div>
+  <span id="speechWord"></span>
+</div>
+
+<script>
+// ── Web Speech API ───────────────────────────────────────────
+const synth = window.speechSynthesis;
+let speechTimer = null;
+let litCard = null;
+
+function say(card, word) {
+  // Cancel any ongoing speech
+  synth.cancel();
+  clearTimeout(speechTimer);
+
+  // Unlight previous card
+  if (litCard && litCard !== card) litCard.classList.remove('lit');
+  litCard = card;
+  card.classList.add('lit');
+
+  // Show speech bar
+  const bar = document.getElementById('speechBar');
+  const wordEl = document.getElementById('speechWord');
+  wordEl.textContent = word;
+  bar.classList.add('visible');
+
+  // Speak
+  if (synth) {
+    // Pronunciation map — prevents TTS reading single letters as letter names
+    const TTS_PRONOUNCE = {
+      'I': 'I',      // force sentence context so iOS reads as pronoun not "capital I"
+      'a': 'a',
+      'A': 'a',
+    };
+    // Wrap single uppercase "I" in a phrase so TTS reads it as the pronoun
+    const speakText = word === 'I' ? 'i' : word; // lowercase makes iOS say the pronoun, not 'capital I'
+    const utt = new SpeechSynthesisUtterance(speakText);
+    utt.rate = 0.85;
+    utt.pitch = 1.1;
+    utt.volume = 1;
+    utt.onend = () => {
+      speechTimer = setTimeout(() => {
+        bar.classList.remove('visible');
+        card.classList.remove('lit');
+        litCard = null;
+      }, 600);
+    };
+    synth.speak(utt);
+  } else {
+    // Fallback for no speech support
+    speechTimer = setTimeout(() => {
+      bar.classList.remove('visible');
+      card.classList.remove('lit');
+      litCard = null;
+    }, 1500);
+  }
+}
+
+function saySchedule(card, word, extra) {
+  say(card, extra || word);
+}
+
+// ── Tab switching ────────────────────────────────────────────
+function showBoard(id, tab) {
+  document.querySelectorAll('.board').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('board-' + id).classList.add('active');
+  tab.classList.add('active');
+
+  // Cancel speech when switching tabs
+  synth.cancel();
+  clearTimeout(speechTimer);
+  document.getElementById('speechBar').classList.remove('visible');
+  if (litCard) { litCard.classList.remove('lit'); litCard = null; }
+}
+
+// ── iOS audio unlock (required for WebKit) ───────────────────
+document.addEventListener('touchstart', () => {
+  const utt = new SpeechSynthesisUtterance('');
+  utt.volume = 0;
+  try { synth.speak(utt); } catch(_) {}
+}, {once: true});
+</script>
+</body>
+</html>

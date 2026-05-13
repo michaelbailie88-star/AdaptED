@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Sign Language Communication Board — AdaptED</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#0f1d2e;--ink2:#3b4659;--ink3:#7a8a9e;
+  --bg:#f8f4ee;--paper:#fff;--line:#e8e0d0;
+  --orange:#f97316;--blue:#3b82f6;--green:#16a34a;
+  --red:#ef4444;--purple:#7c3aed;--teal:#0891b2;
+  --amber:#d97706;--rose:#be185d;
+}
+html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--ink);font-size:14px;line-height:1.5;overscroll-behavior:none}
+
+/* ── NAV ── */
+nav{
+  background:var(--ink);color:#fff;
+  padding:10px 16px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:50;
+}
+.nav-title{font-family:'Fraunces',serif;font-weight:900;font-size:17px;letter-spacing:-0.01em;flex:1}
+.nav-title em{font-style:italic;color:#4db8ff}
+.nav-back{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:5px}
+
+/* ── SENTENCE BUILDER ── */
+#sentenceBar{
+  background:var(--ink);padding:12px 16px;
+  position:sticky;top:48px;z-index:40;
+}
+#sentenceScroll{
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  min-height:40px;align-items:center;padding-bottom:2px;
+}
+#sentenceScroll::-webkit-scrollbar{display:none}
+.sent-chip{
+  flex-shrink:0;background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff;border-radius:8px;padding:6px 10px;
+  font-size:13px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:5px;
+  transition:background 0.12s;
+}
+.sent-chip:hover{background:rgba(255,255,255,0.2)}
+.sent-chip .rm{font-size:10px;opacity:0.6}
+.sent-empty{color:rgba(255,255,255,0.35);font-size:12px;font-style:italic;padding:0 4px}
+.sent-btns{display:flex;gap:8px;margin-top:10px}
+.sent-btn{flex:1;padding:9px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all 0.15s}
+.sent-btn.speak{background:var(--orange);color:#fff}
+.sent-btn.speak:hover{background:#ea580c}
+.sent-btn.clear{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.15)}
+.sent-btn.clear:hover{background:rgba(255,255,255,0.15)}
+
+/* ── TABS ── */
+.tab-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 16px 4px;background:var(--bg)}
+.tab-row::-webkit-scrollbar{display:none}
+.tab-btn{
+  flex-shrink:0;padding:7px 14px;border-radius:20px;
+  border:1.5px solid var(--line);background:var(--paper);
+  color:var(--ink2);font-size:12px;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:all 0.15s;white-space:nowrap;
+}
+.tab-btn.active{background:rgba(0,153,255,0.2);color:#4db8ff;border-color:#4db8ff;text-shadow:0 0 8px rgba(0,153,255,0.5)}
+
+/* ── SIGN GRID ── */
+.section-title{
+  font-family:'Fraunces',serif;font-weight:900;font-size:18px;
+  letter-spacing:-0.01em;color:#fff;padding:14px 16px 6px;
+}
+.sign-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px 16px 16px;
+}
+@media(min-width:480px){.sign-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:700px){.sign-grid{grid-template-columns:repeat(6,1fr)}}
+
+/* ── SIGN CARD ── */
+.sign-card{
+  background:var(--paper);border:1.5px solid var(--line);
+  border-radius:14px;padding:10px 8px 10px;
+  cursor:pointer;text-align:center;
+  transition:transform 0.13s,box-shadow 0.13s,border-color 0.13s;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  border-top:3px solid var(--clr,var(--blue));
+  user-select:none;
+  position:relative;
+}
+.sign-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px -8px rgba(15,29,46,0.18);border-color:var(--clr,var(--blue))}
+.sign-card:active{transform:scale(0.96)}
+.sign-card.speaking{background:rgba(217,119,6,0.15);border-color:var(--orange)!important;box-shadow:0 0 0 3px rgba(249,115,22,0.2)}
+.sign-em{font-size:32px;line-height:1;margin-bottom:2px}
+.sign-hands{font-size:22px;line-height:1.2;min-height:28px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sign-label{font-size:11px;font-weight:700;color:#fff;letter-spacing:0.02em;text-transform:uppercase}
+.sign-desc{font-size:9px;color:var(--ink3);line-height:1.3;margin-top:1px}
+.sign-cat-dot{width:5px;height:5px;border-radius:50%;background:var(--clr,var(--blue));position:absolute;top:7px;right:8px}
+.sign-card.added{animation:addPop 0.3s ease}
+@keyframes addPop{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* ── ALPHABET GRID ── */
+.alpha-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:4px 16px 16px;
+}
+@media(min-width:480px){.alpha-grid{grid-template-columns:repeat(7,1fr)}}
+@media(min-width:700px){.alpha-grid{grid-template-columns:repeat(9,1fr)}}
+.alpha-card{
+  background:var(--paper);border:1.5px solid var(--line);border-radius:10px;
+  padding:8px 4px;cursor:pointer;text-align:center;
+  transition:transform 0.13s,box-shadow 0.13s;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  border-top:3px solid var(--purple);
+  user-select:none;
+}
+.alpha-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px -6px rgba(15,29,46,0.15);border-color:var(--purple)}
+.alpha-card:active{transform:scale(0.95)}
+.alpha-card.speaking{background:rgba(124,58,237,0.15);border-color:var(--purple)!important}
+.alpha-letter{font-family:'Fraunces',serif;font-weight:900;font-size:20px;color:var(--purple);letter-spacing:-0.01em}
+.alpha-hand{font-size:20px;line-height:1}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:10px;flex-wrap:wrap;padding:6px 16px 12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);font-weight:600}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:8px 18px;border-radius:100px;
+  font-size:12px;font-weight:600;opacity:0;transition:all 0.25s;z-index:200;
+  white-space:nowrap;pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── INSTRUCTIONS ── */
+.instructions{
+  background:var(--paper);border:1.5px solid var(--line);border-radius:12px;
+  margin:12px 16px;padding:14px;
+}
+.instructions h3{font-family:'Fraunces',serif;font-size:15px;font-weight:700;margin-bottom:8px}
+.instructions p{font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:6px}
+.instructions p:last-child{margin-bottom:0}
+.how-row{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
+.how-num{width:20px;height:20px;border-radius:6px;background:var(--orange);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+
+/* ═══════════════════════════════════════════════════
+   ⚡ NEON — Sign Language Board · AdaptED Blue
+═══════════════════════════════════════════════════ */
+:root{
+  --nb:#0099ff;
+  --nb2:#00ccff;
+  --nb3:#0055ff;
+  --nt:#00ffcc;
+  --bg:#04080f;
+  --paper:rgba(255,255,255,0.04);
+  --ink:#ffffff;
+  --ink2:rgba(255,255,255,0.72);
+  --ink3:rgba(255,255,255,0.48);
+  --line:rgba(0,153,255,0.12);
+}
+
+html,body{background:#04080f!important;color:#fff!important}
+
+/* Blue nebula */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 75% 55% at 10% 15%,rgba(0,100,255,0.1) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 70% at 88% 80%,rgba(0,200,255,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 40% at 50% 45%,rgba(0,80,200,0.05) 0%,transparent 60%);
+  animation:blueAmbient2 12s ease-in-out infinite alternate;
+}
+@keyframes blueAmbient2{0%{opacity:0.65}100%{opacity:1}}
+
+/* ── KEYFRAMES ── */
+@keyframes floatSign{0%,100%{transform:translateY(0px)}50%{transform:translateY(-8px)}}
+@keyframes floatChip{0%,100%{transform:translateY(0px)}50%{transform:translateY(-4px)}}
+@keyframes bluePulse2{
+  0%,100%{box-shadow:0 0 8px var(--nb),0 0 22px rgba(0,153,255,0.4);border-color:rgba(0,153,255,0.65)}
+  50%{box-shadow:0 0 16px var(--nb2),0 0 40px rgba(0,204,255,0.5);border-color:rgba(0,204,255,0.85)}
+}
+@keyframes borderBlueCycle2{
+  0%,100%{border-color:rgba(0,153,255,0.15)}
+  50%{border-color:rgba(0,204,255,0.28)}
+}
+@keyframes textBlue{
+  0%,100%{text-shadow:none,0 0 16px rgba(0,153,255,0.5)}
+  50%{text-shadow:0 0 13px var(--nb2),0 0 28px rgba(0,204,255,0.7)}
+}
+@keyframes navGlow{
+  0%,100%{box-shadow:0 1px 0 rgba(0,153,255,0.1)}
+  50%{box-shadow:0 1px 0 rgba(0,204,255,0.2),0 4px 20px rgba(0,153,255,0.1)}
+}
+
+/* ── NAV ── */
+nav{
+  background:rgba(4,8,15,0.97)!important;
+  border-bottom:1px solid rgba(0,153,255,0.14)!important;
+  backdrop-filter:blur(16px)!important;
+  animation:navGlow 4s ease infinite!important;
+}
+.nav-title{color:#fff!important}
+.nav-title em{color:var(--nb)!important;text-shadow:none!important;font-style:italic}
+.nav-back{
+  background:rgba(0,153,255,0.1)!important;
+  border:1px solid rgba(0,153,255,0.45)!important;
+  color:var(--nb)!important;text-shadow:none!important;
+  box-shadow:0 0 10px rgba(0,153,255,0.2)!important;
+  transition:all 0.2s!important;
+}
+.nav-back:hover{background:rgba(0,153,255,0.2)!important;box-shadow:0 0 18px rgba(0,153,255,0.4)!important;transform:translateY(-1px)!important}
+
+/* ── SENTENCE BAR ── */
+#sentenceBar{
+  background:rgba(4,8,15,0.96)!important;
+  border-bottom:1px solid rgba(0,153,255,0.12)!important;
+  backdrop-filter:blur(12px)!important;
+}
+.sent-chip{
+  background:rgba(0,153,255,0.1)!important;
+  border:1px solid rgba(0,153,255,0.3)!important;
+  color:#fff!important;
+  animation:floatChip 4s ease-in-out infinite,borderBlueCycle2 5s ease infinite!important;
+  transition:all 0.15s!important;
+}
+.sent-chip:nth-child(2n){animation-delay:0.3s,0.8s!important}
+.sent-chip:nth-child(3n){animation-delay:0.6s,1.6s!important}
+.sent-chip:hover{background:rgba(0,153,255,0.2)!important;box-shadow:0 0 10px rgba(0,153,255,0.3)!important}
+.sent-btn.speak{
+  background:rgba(0,153,255,0.15)!important;
+  border:1.5px solid var(--nb)!important;
+  color:var(--nb)!important;text-shadow:none!important;
+  animation:bluePulse2 2.5s ease infinite!important;
+}
+.sent-btn.speak:hover{filter:brightness(1.3)!important;transform:scale(1.05)!important}
+.sent-btn.clear{background:rgba(255,255,255,0.05)!important;border:1px solid rgba(255,255,255,0.1)!important;color:rgba(255,255,255,0.55)!important}
+
+/* ── TABS ── */
+.tabs{background:rgba(0,0,0,0.35)!important;border-bottom:1px solid rgba(0,153,255,0.09)!important}
+.tab-btn{color:rgba(255,255,255,0.48)!important;transition:all 0.2s!important}
+.tab-btn:hover{color:rgba(0,204,255,0.85)!important;text-shadow:0 0 8px rgba(0,153,255,0.6)!important}
+.tab-btn.active{color:var(--nb)!important;border-bottom-color:var(--nb)!important;text-shadow:none!important}
+
+/* ── SIGN / SYMBOL CARDS ── */
+.sign-card,.word-card,.sym-card,[class*='sign-card'],[class*='word-card']{
+  background:rgba(255,255,255,0.03)!important;
+  border:1px solid rgba(0,153,255,0.1)!important;
+  animation:floatSign 5.5s ease-in-out infinite,borderBlueCycle2 6s ease infinite!important;
+  transition:all 0.2s!important;
+}
+.sign-card:nth-child(2n){animation-delay:0.4s,1s!important}
+.sign-card:nth-child(3n){animation-delay:0.8s,2s!important}
+.sign-card:nth-child(4n){animation-delay:1.2s,3s!important}
+.sign-card:nth-child(5n){animation-delay:1.6s,4s!important}
+.sign-card:hover,.word-card:hover{
+  background:rgba(0,153,255,0.08)!important;
+  border-color:rgba(0,153,255,0.45)!important;
+  box-shadow:0 0 18px rgba(0,153,255,0.22),0 6px 20px rgba(0,0,0,0.4)!important;
+  transform:scale(1.05) translateY(-4px)!important;
+}
+.sign-card.active,.word-card.active,.sign-card.selected{
+  background:rgba(0,153,255,0.14)!important;
+  border-color:var(--nb)!important;
+  box-shadow:0 0 16px rgba(0,153,255,0.45),0 0 32px rgba(0,153,255,0.18)!important;
+}
+
+/* ── CATEGORY HEADERS ── */
+.cat-header,.section-header,[class*='cat-title']{color:var(--nb)!important;text-shadow:none!important;animation:textBlue 3.5s ease infinite!important}
+
+/* ── HOW-NUM ── */
+.how-num{background:rgba(0,153,255,0.2)!important;border:1px solid rgba(0,153,255,0.5)!important;color:var(--nb)!important;text-shadow:none!important;box-shadow:0 0 8px rgba(0,153,255,0.25)!important}
+
+/* ── LIGHT BG KILLER ── */
+[style*="background:#f8f4ee"],[style*="background:#fff"],[style*="background:white"],[style*="background:var(--bg)"],[style*="background:var(--paper)"]{background:rgba(255,255,255,0.03)!important}
+[style*="color:#0f1d2e"],[style*="color:var(--ink)"]{color:#fff!important}
+[style*="color:#3b4659"],[style*="color:var(--ink2)"]{color:rgba(255,255,255,0.7)!important}
+[style*="color:#7a8a9e"],[style*="color:var(--ink3)"]{color:rgba(255,255,255,0.48)!important}
+[style*="background:var(--ink)"]{background:rgba(4,8,15,0.97)!important}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;background:#04080f}
+::-webkit-scrollbar-thumb{background:var(--nb);border-radius:2px;box-shadow:0 0 4px var(--nb)}
+/* ── FINAL READABILITY CATCH-ALL ──
+   Catches any inline styles or remaining hardcoded light colors
+   that escaped the targeted fixes above.
+── */
+[style*="color:#0"],[style*="color:#1"],[style*="color:#2"],
+[style*="color:#3"],[style*="color:#4"],[style*="color:#5"],
+[style*="color:#6"],[style*="color:#7"],[style*="color:#8"],
+[style*="color:#9a"],[style*="color:#9b"],[style*="color:#9c"],
+[style*="color:#9d"],[style*="color:#9e"],[style*="color:#9f"]{
+  color:rgba(255,255,255,0.85)!important;
+}
+/* Override light inline backgrounds */
+[style*="background:#f"]:not([style*="background:#f97"]):not([style*="background:#fb"]):not([style*="background:#fe"]),
+[style*="background:#e"]:not([style*="background:#ef"]):not([style*="background:#ea"]),
+[style*="background:#d"]:not([style*="background:#dc"]),
+[style*="background:#c"]:not([style*="background:#c084"]):not([style*="background:#c2"]):not([style*="background:#cc"]){
+  background:rgba(255,255,255,0.05)!important;
+}
+/* Force all card/section text children to be readable */
+.card *:not(button):not(.tag):not(.heart):not(.card-cat),
+.res-card *:not(button):not(.res-btn):not(.res-pages),
+.mat-card *:not(button),
+.about-card *:not(button):not(.about-contact-btn),
+.plan-card *:not(button),
+.review-card *:not(button){
+  color:inherit;
+}
+
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/app" class="nav-back">← Back</a>
+  <div class="nav-title">Sign Language <em>Board</em></div>
+  <span style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600">ASL · AAC</span>
+</nav>
+
+<!-- Sentence Builder -->
+<div id="sentenceBar">
+  <div id="sentenceScroll">
+    <div class="sent-empty" id="sentEmpty">Tap any sign to build a sentence →</div>
+  </div>
+  <div class="sent-btns">
+    <button class="sent-btn speak" onclick="speakSentence()">▶ Speak sentence</button>
+    <button class="sent-btn clear" onclick="clearSentence()">✕ Clear</button>
+  </div>
+</div>
+
+<!-- Category Tabs -->
+<div class="tab-row" id="tabRow">
+  <button class="tab-btn active" onclick="setTab('all',this)">✦ All signs</button>
+  <button class="tab-btn" onclick="setTab('needs',this)">🙏 Basic needs</button>
+  <button class="tab-btn" onclick="setTab('actions',this)">🏃 Actions</button>
+  <button class="tab-btn" onclick="setTab('feelings',this)">❤️ Feelings</button>
+  <button class="tab-btn" onclick="setTab('people',this)">👨‍👩‍👧 People</button>
+  <button class="tab-btn" onclick="setTab('social',this)">💬 Social</button>
+  <button class="tab-btn" onclick="setTab('alphabet',this)">🔤 Alphabet</button>
+</div>
+
+<!-- Legend -->
+<div class="legend" id="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Needs</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Actions</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>Feelings</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>People</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#be185d"></div>Social</div>
+</div>
+
+<div id="boardContent"></div>
+<div id="toast"></div>
+
+<script>
+/* ─── SIGN DATA ─── */
+const SIGNS = [
+  // BASIC NEEDS
+  {word:'Help',    cat:'needs',   clr:'#3b82f6', hands:'👆🤜',  desc:'Fist on palm, lift up together',   motion:'↑↑'},
+  {word:'More',    cat:'needs',   clr:'#3b82f6', hands:'🤌🤌',  desc:'Fingertips together, tap twice',   motion:'↔'},
+  {word:'Eat',     cat:'needs',   clr:'#3b82f6', hands:'🤏→👄', desc:'Fingers to mouth, tap twice',      motion:'→'},
+  {word:'Drink',   cat:'needs',   clr:'#3b82f6', hands:'🥛✋',  desc:'C-shape to mouth, tilt up',        motion:'↑'},
+  {word:'Water',   cat:'needs',   clr:'#3b82f6', hands:'🤟💧',  desc:'W near chin, tap twice',           motion:'↕'},
+  {word:'Milk',    cat:'needs',   clr:'#3b82f6', hands:'✊→✋', desc:'Squeeze fist open and closed',     motion:'↕'},
+  {word:'Sleep',   cat:'needs',   clr:'#3b82f6', hands:'😴✋',  desc:'Hand sweeps down over face',       motion:'↓'},
+  {word:'Toilet',  cat:'needs',   clr:'#3b82f6', hands:'✌️🤟',  desc:'T hand shakes side to side',       motion:'↔'},
+  {word:'Open',    cat:'needs',   clr:'#3b82f6', hands:'🙌→🤲', desc:'Flat hands, palms up, open out',   motion:'↔'},
+  {word:'Clean',   cat:'needs',   clr:'#3b82f6', hands:'🤚→🤲', desc:'Flat hand wipes other palm',       motion:'→'},
+
+  // ACTIONS
+  {word:'Play',    cat:'actions', clr:'#16a34a', hands:'🤙🤙',  desc:'Y-hands rotate at wrists',         motion:'↺↺'},
+  {word:'Stop',    cat:'actions', clr:'#16a34a', hands:'✋🖐️',  desc:'Flat hand chops down on palm',     motion:'↓'},
+  {word:'Go',      cat:'actions', clr:'#16a34a', hands:'☝️→',   desc:'Index fingers arc forward',        motion:'→'},
+  {word:'Sit',     cat:'actions', clr:'#16a34a', hands:'✌️↓',   desc:'Two fingers sit on other two',     motion:'↓'},
+  {word:'Come',    cat:'actions', clr:'#16a34a', hands:'☝️←',   desc:'Index finger curves toward body',  motion:'←'},
+  {word:'Wait',    cat:'actions', clr:'#16a34a', hands:'🖐️🖐️', desc:'Both hands, fingers wiggle',       motion:'↕'},
+  {word:'Look',    cat:'actions', clr:'#16a34a', hands:'✌️👁️',  desc:'V fingers point from eyes out',    motion:'→'},
+  {word:'Show Me', cat:'actions', clr:'#16a34a', hands:'🤲→',   desc:'Flat hands move outward together', motion:'→'},
+  {word:'Question',cat:'actions', clr:'#16a34a', hands:'☝️↺',   desc:'Index finger traces a question mark',motion:'↺'},
+  {word:'Less',    cat:'actions', clr:'#16a34a', hands:'🖐️↓',   desc:'Flat hands move toward each other',motion:'↓'},
+
+  // FEELINGS
+  {word:'Happy',   cat:'feelings',clr:'#f59e0b', hands:'🖐️↑↑', desc:'Flat hand circles up on chest',   motion:'↑↑'},
+  {word:'Sad',     cat:'feelings',clr:'#f59e0b', hands:'😢👐', desc:'Both hands slide down face',       motion:'↓'},
+  {word:'Angry',   cat:'feelings',clr:'#f59e0b', hands:'😠🤜', desc:'Claw hand pulls from chin',        motion:'↑'},
+  {word:'Scared',  cat:'feelings',clr:'#f59e0b', hands:'😨🤚', desc:'Both hands shake in front of body',motion:'↔'},
+  {word:'Excited', cat:'feelings',clr:'#f59e0b', hands:'✋↑',  desc:'Alternating hands brush up chest', motion:'↑↑'},
+  {word:'Tired',   cat:'feelings',clr:'#f59e0b', hands:'😴👐', desc:'Bent hands fall from chest',       motion:'↓'},
+  {word:'Love',    cat:'feelings',clr:'#f59e0b', hands:'🤗❤️', desc:'Arms cross over chest',            motion:'✕'},
+  {word:'Pain',    cat:'feelings',clr:'#f59e0b', hands:'☝️☝️', desc:'Index fingers point together, twist',motion:'↺'},
+
+  // PEOPLE
+  {word:'Mom',     cat:'people',  clr:'#ef4444', hands:'🖐️👋', desc:'5-hand taps chin twice',           motion:'↓↓'},
+  {word:'Dad',     cat:'people',  clr:'#ef4444', hands:'🖐️👋', desc:'5-hand taps forehead twice',       motion:'↓↓'},
+  {word:'Baby',    cat:'people',  clr:'#ef4444', hands:'🤲↺',  desc:'Arms rock like holding a baby',    motion:'↺'},
+  {word:'Friend',  cat:'people',  clr:'#ef4444', hands:'☝️🔗', desc:'Index fingers hook together, swap',motion:'↺'},
+  {word:'Teacher', cat:'people',  clr:'#ef4444', hands:'🤌→',  desc:'Flat hands from forehead outward', motion:'→'},
+  {word:'Me',      cat:'people',  clr:'#ef4444', hands:'☝️→', desc:'Index finger points to self',       motion:'→'},
+  {word:'You',     cat:'people',  clr:'#ef4444', hands:'☝️↗',  desc:'Index finger points to other',     motion:'→'},
+
+  // SOCIAL
+  {word:'Please',  cat:'social',  clr:'#be185d', hands:'🖐️↺',  desc:'Flat hand circles on chest',       motion:'↺'},
+  {word:'Thank You',cat:'social', clr:'#be185d', hands:'✋→',   desc:'Flat hand moves from chin forward', motion:'→'},
+  {word:'You\'re Welcome',cat:'social',clr:'#be185d',hands:'🤲↺',desc:'Flat hand arcs from chin to chest',motion:'↺'},
+  {word:'Sorry',   cat:'social',  clr:'#be185d', hands:'✊↺',   desc:'Fist circles over chest',          motion:'↺'},
+  {word:'Yes',     cat:'social',  clr:'#be185d', hands:'✊↕',   desc:'Fist nods up and down',            motion:'↕'},
+  {word:'No',      cat:'social',  clr:'#be185d', hands:'✌️→',   desc:'Two fingers snap closed',          motion:'→'},
+  {word:'All Done',cat:'social',  clr:'#be185d', hands:'🙌↺',   desc:'Both hands twist outward',         motion:'↺↺'},
+  {word:'I Love You',cat:'social',clr:'#be185d', hands:'🤟❤️',  desc:'ILY handshape — pinky, index, thumb up',motion:'↑'},
+];
+
+/* ─── ASL ALPHABET ─── */
+const ALPHABET = [
+  {l:'A',hand:'✊',desc:'Fist, thumb to side'},
+  {l:'B',hand:'🖐️',desc:'Fingers up, thumb folded'},
+  {l:'C',hand:'🤏',desc:'Curved C shape'},
+  {l:'D',hand:'☝️',desc:'Index up, others curve to thumb'},
+  {l:'E',hand:'🤙',desc:'Fingers curl down'},
+  {l:'F',hand:'👌',desc:'Thumb-index circle, others up'},
+  {l:'G',hand:'👈',desc:'Index and thumb point sideways'},
+  {l:'H',hand:'✌️',desc:'Two fingers point sideways'},
+  {l:'I',hand:'🤙',desc:'Pinky up only'},
+  {l:'J',hand:'🤙',desc:'Pinky draws J in air'},
+  {l:'K',hand:'✌️',desc:'Index up, middle diagonal, thumb between'},
+  {l:'L',hand:'🤙',desc:'L-shape — index up, thumb out'},
+  {l:'M',hand:'✊',desc:'Three fingers over thumb'},
+  {l:'N',hand:'✊',desc:'Two fingers over thumb'},
+  {l:'O',hand:'👌',desc:'All fingers curve to thumb'},
+  {l:'P',hand:'👇',desc:'K-shape pointing down'},
+  {l:'Q',hand:'👇',desc:'G-shape pointing down'},
+  {l:'R',hand:'✌️',desc:'Crossed index and middle fingers'},
+  {l:'S',hand:'✊',desc:'Fist, thumb over fingers'},
+  {l:'T',hand:'✊',desc:'Thumb between index and middle'},
+  {l:'U',hand:'✌️',desc:'Two fingers up together'},
+  {l:'V',hand:'✌️',desc:'V shape — index and middle apart'},
+  {l:'W',hand:'🤟',desc:'Three fingers up — W shape'},
+  {l:'X',hand:'☝️',desc:'Index finger hooks/bends'},
+  {l:'Y',hand:'🤙',desc:'Thumb and pinky out — Y shape'},
+  {l:'Z',hand:'☝️',desc:'Index draws Z in air'},
+];
+
+/* ─── STATE ─── */
+let sentence = [];
+let currentTab = 'all';
+let speaking = false;
+
+/* ─── RENDER ─── */
+function setTab(tab, btn){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('legend').style.display = tab==='alphabet' ? 'none' : 'flex';
+  render();
+}
+
+function render(){
+  const el = document.getElementById('boardContent');
+  if(currentTab === 'alphabet'){
+    renderAlphabet(el); return;
+  }
+  const signs = currentTab==='all' ? SIGNS : SIGNS.filter(s=>s.cat===currentTab);
+  const grouped = {};
+  signs.forEach(s=>{
+    if(!grouped[s.cat]) grouped[s.cat]=[];
+    grouped[s.cat].push(s);
+  });
+  const catNames = {needs:'🙏 Basic Needs',actions:'🏃 Actions',feelings:'❤️ Feelings',people:'👨‍👩‍👧 People',social:'💬 Social'};
+  let html = '';
+  if(currentTab === 'all'){
+    html += renderInstructions();
+    Object.keys(grouped).forEach(cat=>{
+      html += `<div class="section-title">${catNames[cat]||cat}</div>`;
+      html += `<div class="sign-grid" id="grid-${cat}"></div>`;
+    });
+    el.innerHTML = html;
+    Object.keys(grouped).forEach(cat=>{
+      const g = document.getElementById('grid-'+cat);
+      grouped[cat].forEach(s=>g.appendChild(makeSignCard(s)));
+    });
+  } else {
+    el.innerHTML = `<div class="section-title">${catNames[currentTab]||currentTab}</div><div class="sign-grid" id="main-grid"></div>`;
+    const g = document.getElementById('main-grid');
+    signs.forEach(s=>g.appendChild(makeSignCard(s)));
+  }
+}
+
+function renderInstructions(){
+  return `<div class="instructions">
+    <h3>How to use this board</h3>
+    <div class="how-row"><div class="how-num">1</div><div>Tap any sign card to hear it spoken aloud</div></div>
+    <div class="how-row"><div class="how-num">2</div><div>Each tap also adds the word to your sentence above</div></div>
+    <div class="how-row"><div class="how-num">3</div><div>Tap <strong>Speak sentence</strong> to hear the full sentence read aloud</div></div>
+    <div class="how-row"><div class="how-num">4</div><div>Tap a word in the sentence bar to remove it</div></div>
+    <p style="margin-top:8px;font-size:11px;color:var(--ink3)">Designed by Tatianna Bailie · over 20 years working with children and youth of all ages & over 15 years with the YMCA</p>
+  </div>`;
+}
+
+function makeSignCard(s){
+  const div = document.createElement('div');
+  div.className = 'sign-card';
+  div.style.setProperty('--clr', s.clr);
+  div.innerHTML = `
+    <div class="sign-cat-dot"></div>
+    <div class="sign-hands">${s.hands}</div>
+    <div class="sign-label">${s.word}</div>
+    <div class="sign-desc">${s.desc}</div>`;
+  div.addEventListener('click', ()=>tapSign(s, div));
+  return div;
+}
+
+function renderAlphabet(el){
+  el.innerHTML = `<div class="section-title">🔤 ASL Alphabet — A to Z</div><div class="alpha-grid" id="alphaGrid"></div>`;
+  const g = document.getElementById('alphaGrid');
+  ALPHABET.forEach(a=>{
+    const div = document.createElement('div');
+    div.className = 'alpha-card';
+    div.innerHTML = `<div class="alpha-letter">${a.l}</div><div class="alpha-hand">${a.hand}</div>`;
+    div.title = a.desc;
+    div.addEventListener('click', ()=>tapAlpha(a, div));
+    g.appendChild(div);
+  });
+}
+
+/* ─── INTERACTION ─── */
+function tapSign(s, el){
+  // Speak
+  speak(s.word);
+  // Visual feedback
+  el.classList.add('speaking');
+  setTimeout(()=>el.classList.remove('speaking'), 700);
+  // Add to sentence
+  addToSentence(s.word);
+  el.classList.add('added');
+  setTimeout(()=>el.classList.remove('added'), 300);
+}
+
+function tapAlpha(a, el){
+  speak('Letter ' + a.l + '. ' + a.desc);
+  el.classList.add('speaking');
+  setTimeout(()=>el.classList.remove('speaking'), 700);
+  addToSentence(a.l);
+}
+
+function speak(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  // Fix: single "I" is read as "capital I" by iOS TTS — wrap in phrase context
+  const speakText = text === 'I' ? 'i' : text;
+  const utt = new SpeechSynthesisUtterance(speakText);
+  utt.rate = 0.9;
+  utt.pitch = 1.05;
+  window.speechSynthesis.speak(utt);
+}
+
+function speakSentence(){
+  if(!sentence.length){ showToast('Add some signs first'); return; }
+  const text = sentence.join(' ');
+  speak(text);
+  showToast('Speaking: ' + text);
+}
+
+/* ─── SENTENCE BUILDER ─── */
+function addToSentence(word){
+  sentence.push(word);
+  renderSentence();
+}
+
+function removeFromSentence(idx){
+  sentence.splice(idx, 1);
+  renderSentence();
+}
+
+function clearSentence(){
+  sentence = [];
+  renderSentence();
+  window.speechSynthesis && window.speechSynthesis.cancel();
+}
+
+function renderSentence(){
+  const scroll = document.getElementById('sentenceScroll');
+  const empty = document.getElementById('sentEmpty');
+  if(!sentence.length){
+    scroll.innerHTML = '';
+    const e = document.createElement('div');
+    e.className = 'sent-empty';
+    e.id = 'sentEmpty';
+    e.textContent = 'Tap any sign to build a sentence →';
+    scroll.appendChild(e);
+    return;
+  }
+  scroll.innerHTML = '';
+  sentence.forEach((w,i)=>{
+    const chip = document.createElement('div');
+    chip.className = 'sent-chip';
+    chip.innerHTML = `${w} <span class="rm">✕</span>`;
+    chip.addEventListener('click', ()=>removeFromSentence(i));
+    scroll.appendChild(chip);
+  });
+  // Auto-scroll right
+  setTimeout(()=>scroll.scrollLeft = scroll.scrollWidth, 50);
+}
+
+/* ─── TOAST ─── */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ─── INIT ─── */
+render();
+</script>
+</body>
+</html>
